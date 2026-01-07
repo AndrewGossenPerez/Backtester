@@ -1,6 +1,10 @@
+// binding.cpp, created by Andrew Gossen.
+
+// This establishes the core types for the Python interface
+// This is currently just a quick prototype, will be refined later on 
+
 #include <pybind11/pybind11.h>
 #include "backtesting/strategies.hpp"
-#include "backtesting/backtesting.hpp"
 #include "backtesting/backtesting.hpp"
 #include "data/csv_reader.hpp"
 #include <pybind11/stl.h>

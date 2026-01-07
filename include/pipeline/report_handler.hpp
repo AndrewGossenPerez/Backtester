@@ -44,8 +44,8 @@ class ReportHandler{
         );
     }
 
-    std::vector<trd::TradeLog> getTrades() { return m_trades; }
-    std::vector<trd::EquityPoint> getEquityPoints() { return m_equityCurve; }
+    std::vector<trd::TradeLog>& getTrades() { return m_trades; }
+    std::vector<trd::EquityPoint>& getEquityPoints() { return m_equityCurve; }
 
     private:
 

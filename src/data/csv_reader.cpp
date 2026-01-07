@@ -1,3 +1,16 @@
+// csv_reader.cpp, created by Andrew Gossen Andrew Gossen
+//
+// Implementation of csv_reader.hpp loadBar() function
+// Loads OHLCV bar data from CSV into a vector<trd::Bar>
+//
+// Design:
+// - Reads the entire file into a contiguous std::string buffer
+// - Parses in-place using pointer arithmetic (no per-field allocations)
+//
+// Notes:
+// - Assumes a header row is present and skips the first line
+// - Timestamps are parsed either as YYYY-MM-DD (converted to epoch seconds UTC)
+//   or as a numeric epoch, depending on `epochGiven`
 
 #include "data/csv_reader.hpp"
 #include <iostream> 

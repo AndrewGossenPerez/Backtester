@@ -1,4 +1,19 @@
 
+// backtester.cpp, created by Andrew Gossen.
+
+// This is the implementation of backtesting.hpp 
+// and the Backtest::run() function 
+// 
+// Design :
+//  - Runs an event-driven backtest over a time ordered bar series gathered from the CSV ingestor
+//  - Each bar pair ( current , next ) generates a market event which propagates through the pipeline
+//  - The propogation is in the following order : 
+//  - MarketEvent -> StrategyHandler -> SignalEvent -> RiskHandler -> OrderEvent -> ExcecutionHandler -> 
+//    FillEvent -> PortfolioHandler 
+//
+// Notes : 
+// -- The dispatcher curently processes events sequentially
+
 #include <iostream>
 #include "core/types.hpp"
 #include "data/bar.hpp"
