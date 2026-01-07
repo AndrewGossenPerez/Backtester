@@ -1,6 +1,0 @@
-/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/CMakeFiles/engine_core.dir
-/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/CMakeFiles/trading_engine.dir
-/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/CMakeFiles/edit_cache.dir
-/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/CMakeFiles/rebuild_cache.dir
-/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/externals/pybind11/CMakeFiles/edit_cache.dir
-/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/externals/pybind11/CMakeFiles/rebuild_cache.dir

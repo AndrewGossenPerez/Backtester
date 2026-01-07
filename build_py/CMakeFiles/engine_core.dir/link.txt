@@ -1,2 +1,0 @@
-/usr/bin/ar qc libengine_core.a CMakeFiles/engine_core.dir/backtesting/backtester.cpp.o CMakeFiles/engine_core.dir/backtesting/excecution.cpp.o CMakeFiles/engine_core.dir/data/csv_reader.cpp.o
-/usr/bin/ranlib libengine_core.a
