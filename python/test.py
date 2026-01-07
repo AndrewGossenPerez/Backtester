@@ -1,5 +1,5 @@
 
-# This is currently just a prototype set up to validate the backtesting engine
+# This is currently just a prototype set up to validate the backtesting
 
 import trading_engine as te
 import matplotlib.pyplot as plt
