@@ -9,6 +9,11 @@ A work-in-progress trading engine with a C++ backtester and a Python front-end d
 
 <img width="277.4" height="134.6" alt="image" src="https://github.com/user-attachments/assets/fe4f738b-a0ae-4eb8-aa36-42a9b90403fd" />
 
+## Current Benchmarks 
+Backtesting Throughput ~ 1.8M bars/sec (The median of 100 runs of the Bitcoin csv, consiting of 7.6M+ bars)
+
+
+Data Ingestion ~ 2.2M Bars/sec (The median for 100 runs of the Bitcoin csv, consiting of 7.6M+ bars)
 
 ## Features
 - [x] Modular strategy framework  
