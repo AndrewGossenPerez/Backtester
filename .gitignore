@@ -1,6 +1,7 @@
 # Build directories
 build/
 build_py/
+.DS_Store
 
 # CMake artifacts
 CMakeFiles/
