@@ -8,10 +8,21 @@
 <img width="1392" height="682" alt="Screenshot 2026-01-07 at 11 00 34 PM" src="https://github.com/user-attachments/assets/9f97bc82-481f-4348-af3e-b2e4b725d27e" />
 
 ## Benchmarks
-- **Backtesting throughput:** ~**1.8M bars/s**
-- **Data ingestion throughput:** ~**2.2M bars/s**
 
-*Median of 100 runs on a Bitcoin OHLCV dataset (~7.6M bars).*
+### Backtesting Engine (100 runs)
+- **Median runtime:** 4.01 s  
+- **P90 runtime:** 4.20 s  
+- **Min / Max:** 3.71 s / 4.54 s  
+- **Median throughput:** **1.84M bars/s**  
+- **P90 throughput:** **1.76M bars/s**  
+- **Median fills processed:** 3.68M  
+- **Median fills/sec:** **919K**
+
+### CSV Ingestion
+- **Throughput:** **2.42M bars/s**
+- **Elapsed:** 3.04 s
+
+*Dataset: ~7.6M-row Bitcoin OHLCV dataset, Coinflip strategy.*
 
 ## Features
 - [x] Modular strategy framework
