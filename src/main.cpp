@@ -1,7 +1,6 @@
 #include "data/csv_reader.hpp"
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
-#include "data/config.hpp"
 #include "backtesting/backtesting.hpp"
 
 #include <algorithm>
@@ -21,7 +20,6 @@ int main() {
 
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
-
     Excecution exce(1.0);
     CoinFlipStrategy strat; 
     trd::Backtest bt(portfolio, exce);
@@ -104,5 +102,5 @@ int main() {
 
     // stop unused warning
     (void)sink;
-    
+
 }

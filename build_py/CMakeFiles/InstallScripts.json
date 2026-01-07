@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/cmake_install.cmake",
+		"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py/externals/pybind11/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

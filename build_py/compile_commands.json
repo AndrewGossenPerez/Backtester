@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py",
+  "command": "/usr/bin/c++  -I\"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/../include\" -O3 -DNDEBUG -std=gnu++17 -arch arm64 -o CMakeFiles/engine_core.dir/backtesting/backtester.cpp.o -c \"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/backtesting/backtester.cpp\"",
+  "file": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/backtesting/backtester.cpp",
+  "output": "CMakeFiles/engine_core.dir/backtesting/backtester.cpp.o"
+},
+{
+  "directory": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py",
+  "command": "/usr/bin/c++  -I\"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/../include\" -O3 -DNDEBUG -std=gnu++17 -arch arm64 -o CMakeFiles/engine_core.dir/backtesting/excecution.cpp.o -c \"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/backtesting/excecution.cpp\"",
+  "file": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/backtesting/excecution.cpp",
+  "output": "CMakeFiles/engine_core.dir/backtesting/excecution.cpp.o"
+},
+{
+  "directory": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py",
+  "command": "/usr/bin/c++  -I\"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/../include\" -O3 -DNDEBUG -std=gnu++17 -arch arm64 -o CMakeFiles/engine_core.dir/data/csv_reader.cpp.o -c \"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/data/csv_reader.cpp\"",
+  "file": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/data/csv_reader.cpp",
+  "output": "CMakeFiles/engine_core.dir/data/csv_reader.cpp.o"
+},
+{
+  "directory": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/build_py",
+  "command": "/usr/bin/c++ -Dtrading_engine_EXPORTS -I\"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/../include\" -isystem /Library/Frameworks/Python.framework/Versions/3.12/include/python3.12 -isystem \"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/externals/pybind11/include\" -O3 -DNDEBUG -std=gnu++17 -arch arm64 -fPIC -fvisibility=hidden -flto -o CMakeFiles/trading_engine.dir/binding/binding.cpp.o -c \"/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/binding/binding.cpp\"",
+  "file": "/Users/andrewgossen/Documents/C++ Projects/TradingEngine/src/binding/binding.cpp",
+  "output": "CMakeFiles/trading_engine.dir/binding/binding.cpp.o"
+}
+]

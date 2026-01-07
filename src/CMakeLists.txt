@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.20)
+project(pybind_vid LANGUAGES CXX)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_library(engine_core
+    backtesting/backtester.cpp
+    backtesting/excecution.cpp
+    data/csv_reader.cpp
+)
+
+target_include_directories(engine_core PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/../include
+)
+
+add_subdirectory(../externals/pybind11 externals/pybind11)
+
+pybind11_add_module(trading_engine binding/binding.cpp)
+
+target_include_directories(trading_engine PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/../include
+)
+
+target_link_libraries(trading_engine PRIVATE engine_core)

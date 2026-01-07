@@ -3,15 +3,11 @@
 #include <cstddef>
 
 template <typename T, std::size_t capacity>
-
 class RingBuffer{
-
-    static_assert(capacity>0,"Ring buffer capacity must be >0");
 
     public:
 
-    bool push(T&& el){ // Temporary overload for pushing to the buffer
-        // returns success
+    bool push(T&& el){ 
         if (full()) return false;
         m_buffer[m_tail]=std::move(el); // Move into the buffer 
         m_tail=increment(m_tail);
@@ -19,14 +15,12 @@ class RingBuffer{
         return true;
     }
 
-    bool push(T const& el){ // Reference overload
-        
+    bool push(T const& el){  
         if (full()) return false;
         m_buffer[m_tail]=el; // Copies into the buffer 
         m_tail=increment(m_tail);
         ++m_count;
         return true;
-
     }
 
     bool pop(T& el){

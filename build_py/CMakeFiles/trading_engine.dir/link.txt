@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -arch arm64 -bundle -Wl,-headerpad_max_install_names -Xlinker -undefined -Xlinker dynamic_lookup -flto -o trading_engine.cpython-312-darwin.so CMakeFiles/trading_engine.dir/binding/binding.cpp.o  libengine_core.a
