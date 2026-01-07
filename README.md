@@ -11,9 +11,13 @@ A work-in-progress trading engine with a C++ backtester and a Python front-end d
 
 ## Current Benchmarks 
 Backtesting Throughput: ~1.8M bars/sec
+
+
 *(median of 100 runs; Bitcoin OHLCV dataset, 7.6M+ bars)*
 
 Data Ingestion Throughput: ~2.2M bars/sec
+
+
 *(median of 100 runs; Bitcoin OHLCV dataset, 7.6M+ bars)*
 
 
