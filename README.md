@@ -1,13 +1,10 @@
 
-A work-in-progress trading engine with a C++ backtester and a Python front-end data visualisation/plotting.
+**A work-in-progress trading engine with a C++ backtester and a Python front-end data visualisation/plotting.**
+--
 
-<img width="200" height="200" alt="Deltoid2" src="https://github.com/user-attachments/assets/c6585f45-40cb-49f2-9ad0-850d47ff203c" />
+**Example of a Buy-Hold strategy backtested against Bitcoin's market data and plotted with Matplotlib**
+<img width="1392" height="682" alt="Screenshot 2026-01-07 at 11 00 34 PM" src="https://github.com/user-attachments/assets/9f97bc82-481f-4348-af3e-b2e4b725d27e" />
 
-
-**Current example of a Buy-Hold strategy backtested and plotted with Matplotlib**
-
-
-<img width="277.4" height="134.6" alt="image" src="https://github.com/user-attachments/assets/fe4f738b-a0ae-4eb8-aa36-42a9b90403fd" />
 
 ## Current Benchmarks 
 Backtesting Throughput: ~1.8M bars/sec
