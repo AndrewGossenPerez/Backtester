@@ -33,6 +33,7 @@ trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strat
 
     // Main loop 
     for (std::size_t i=0; i+1 < bars.size();++i){
+        
         marketState.current=bars[i];
         marketState.next=bars[i+1];
         // Create marketEvent which will propogate new events through the pipeline
@@ -43,6 +44,7 @@ trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strat
     { // Format result 
 
     result.finalEquity=m_portfolio.equity(bars.back().close);
+
     result.equityPoints=dispatcher.getReportHandler().getEquityPoints();
     result.trades=dispatcher.getReportHandler().getTrades();
 

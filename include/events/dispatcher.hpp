@@ -36,7 +36,8 @@ class Dispatcher{
     m_handlerRisk(portfolio,*this),
     m_handlerExce(exce,marketState,*this),
     m_handlerPort(portfolio),
-    m_handlerReport(marketState,portfolio,result) {} 
+    m_handlerReport(marketState,portfolio,result)
+    {}
 
     using queue=RingBuffer<Event,capacity>;
 
@@ -52,7 +53,7 @@ class Dispatcher{
     }
 
     // Overload 'on' functions to run the appropraite handler 
-    void on(const events::MarketEvent& ev) { m_handlerStrat.on(ev); m_handlerReport.equityPoint(); } 
+    void on(const events::MarketEvent& ev) { m_handlerStrat.on(ev); m_handlerReport.setEquity(); } 
     void on(const events::SignalEvent& ev) { m_handlerRisk.on(ev); }
     void on(const events::OrderEvent& ev) { m_handlerExce.on(ev); }
     void on(const events::FillEvent& ev) { m_handlerPort.on(ev); m_handlerReport.on(ev); }
@@ -79,6 +80,8 @@ class Dispatcher{
     ExcecutionHandler<Dispatcher> m_handlerExce;
     PortfolioHandler m_handlerPort;
     ReportHandler m_handlerReport;
+
+    
 
 };
 

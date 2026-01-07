@@ -81,12 +81,6 @@ int main() {
     portfolio.setEquity(startingEquity);
     trd::Result re=bt.run(bars,strat);
 
-    std::cout << "\n -- BACKTEST RESULT --\n";
-    std::printf("[Starting Equity]: %d \n",(int)startingEquity);
-    std::printf("[Final Equity]: %d \n",(int)re.finalEquity);
-    std::printf("[Fills completed]: %d \n",(int)re.trades.size());
-    std::printf("[Equity Points]: %d \n",(int)re.equityPoints.size());
-
     std::cout << "\n--- BENCHMARKS BACKTESTER (" << N << " runs) ---\n";
     std::printf("[median time]: %.9f s\n", median);
     std::printf("[p90 time]: %.9f s\n", p90);
@@ -95,7 +89,6 @@ int main() {
     std::printf("[p90 bars/sec]: %.0f\n", barsPerSecP90);
     std::printf("[median fills]: %.0f\n", medianFills);
     std::printf("[median fills/sec]: %.0f\n", fillsPerSecMedian);
-
     std::cout << "\n--- BENCHMARKS CSV INGESTION ---\n";
     std::printf("[bars/sec]: %.0f\n", (bars.size() / secondsCSV));
     std::printf("[elapsed]: %.9f s\n", secondsCSV);

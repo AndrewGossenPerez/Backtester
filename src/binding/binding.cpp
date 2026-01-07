@@ -3,29 +3,41 @@
 #include "backtesting/backtesting.hpp"
 #include "backtesting/backtesting.hpp"
 #include "data/csv_reader.hpp"
+#include <pybind11/stl.h>
+#include <iostream>
 
 namespace py = pybind11;
 
-static trd::price run_backtest() {
+static trd::Result run_backtest(int startingAmount) {
 
-    trd::price startingEquity{100'000};
-
+    trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
     std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
-
     Portfolio p;
     p.setEquity(startingEquity);
 
     Excecution exce(1.0);
-    CoinFlipStrategy strat;
+    BuyAndHold strat;
 
     trd::Backtest bt(p, exce);
     trd::Result re=bt.run(bars, strat);
-    return re.finalEquity;
+
+    return re;
 
 }
 
 PYBIND11_MODULE(trading_engine, m) {
+
     m.doc() = "The python interface for the trading engine";
-    m.def("run", &run_backtest, "Run a backtest with prefined data");
+    
+    py::class_<trd::EquityPoint>(m,"EquityPoint")
+       .def_readonly("epoch",&trd::EquityPoint::epoch)
+       .def_readonly("equity",&trd::EquityPoint::equity);
+
+    py::class_<trd::Result>(m, "Result")
+        .def(py::init<>())
+        .def_readonly("equityPoints", &trd::Result::equityPoints); 
+
+    m.def("run", &run_backtest, "Run a backtest with predefined data");
+
 }

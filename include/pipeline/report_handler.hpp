@@ -6,6 +6,7 @@
 #include "core/portfolio.hpp"
 #include "backtesting/backtesting.hpp"
 #include <vector>
+#include <iostream>
 
 class ReportHandler{ 
 
@@ -29,7 +30,7 @@ class ReportHandler{
         
     }
 
-    void equityPoint(){
+    void setEquity(){
         m_equityCurve.emplace_back( 
             m_marketState.current.epoch,
             m_portfolio.equity(m_marketState.current.close)
@@ -41,11 +42,12 @@ class ReportHandler{
 
     private:
 
-    trd::MarketState m_marketState;
-    Portfolio m_portfolio;
+    trd::MarketState& m_marketState;
+    Portfolio& m_portfolio;
     trd::Result& m_result;
 
+    // The below vectors are reserved in size in backtester.cpp
     std::vector<trd::TradeLog> m_trades; // Stores each succesful trade ( i.e. fill ) after an excecution is completed 
     std::vector<trd::EquityPoint> m_equityCurve; // Stores the portfolio's equity after each market event 
-
+    
 };
