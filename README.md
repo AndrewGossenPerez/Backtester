@@ -5,9 +5,8 @@ A work-in-progress trading engine with a C++ backtester and a Python front-end f
 
 ## Features
 - [x] Modular strategy framework  
-- [x] Historical CSV market data ingestion ( As of now ~0.5 to 1 microsecond per bar throughput) 
-- [X] Backtesting engine (Event-driven architecture, fairly low-latent) 
-- [ ] Orderbooking during Excecution
+- [x] Historical CSV market data ingestion
+- [X] Backtesting engine (Event-driven architecture) 
 - [ ] Trade logging & performance analytics  
 - [ ] Config-driven system (strategies, instruments, risk parameters)  
 - [ ] Python Interface
