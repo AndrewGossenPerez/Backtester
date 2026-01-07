@@ -5,6 +5,7 @@
 #include "events/events.hpp"
 
 struct TraceHandler {
+
     void on(const events::Event& e) {
         if (std::holds_alternative<events::MarketEvent>(e)) {
             std::cout << "MarketEvent\n";
@@ -19,5 +20,6 @@ struct TraceHandler {
             std::cout << "FillEvent qty=" << f.qty << " price=" << f.px << " fee=" << f.fee << "\n";
         }
     }
+    
 };
 

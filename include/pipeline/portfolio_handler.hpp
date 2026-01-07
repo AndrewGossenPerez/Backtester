@@ -10,18 +10,14 @@ class PortfolioHandler{
 
     explicit PortfolioHandler(Portfolio& portfolio) : m_portfolio(portfolio) {}
 
-    void on(const events::Event& event){
+    void on(const events::FillEvent& ev){
 
-        if (auto* ev=std::get_if<events::FillEvent>(&event)){
-            // Event is a Fill event
-            
-            if (ev->side == trd::Side::Buy) { 
-                // Apply a buy action
-                m_portfolio.buy(ev->qty,ev->px,ev->fee);
-            } else if (ev->side == trd::Side::Sell) { 
-                m_portfolio.sell(ev->qty,ev->px,ev->fee);
-            }
-
+        // Event is a Fill event
+        if (ev.side == trd::Side::Buy) { 
+            // Apply a buy action
+            m_portfolio.buy(ev.qty,ev.px,ev.fee);
+        } else if (ev.side == trd::Side::Sell) { 
+            m_portfolio.sell(ev.qty,ev.px,ev.fee);
         }
 
     }

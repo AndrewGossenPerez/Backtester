@@ -64,8 +64,10 @@ class Dispatcher{
     private: 
 
     void dispatch(Event& e){ // Will dispatch an event, i.e. run the appropriate handler through overload resolution 
-        std::visit( 
-            [this](auto const& event){this->on(event);},
+        std::visit( // Pass the variant value directly into the lambda and call appropriate ocerloaded on function
+            [this](auto const& event){
+                this->on(event);
+            },
             e
         );
     }

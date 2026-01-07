@@ -15,6 +15,7 @@ class ReportHandler{
     m_portfolio(portfolio), m_result(result) {}
 
     void on(const events::FillEvent& event){ 
+
         // Trade was completed, log this trade 
         m_trades.emplace_back( 
                 event.epoch,
@@ -25,6 +26,7 @@ class ReportHandler{
         );
 
         m_result.netFees+=event.fee;
+        
     }
 
     void equityPoint(){

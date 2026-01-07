@@ -10,15 +10,16 @@ struct RiskHandler{
 
     RiskHandler(Portfolio& portfolio,dispatchT& dispatcher) : m_portfolio(portfolio), m_dispatcher(dispatcher) {};
 
-    void on(const events::SignalEvent& event){
-        // Is a signal event 
+    void on(const events::SignalEvent& event){ // For now a simple position-gate risk layer 
+
         if (event.side==trd::Side::Buy && m_portfolio.pos==0){
-            // Buy Signal
+            // If we have no assets, buy one 
             m_dispatcher.schedule(events::OrderEvent{event.epoch,event.side,1});
         } else if (event.side==trd::Side::Sell && m_portfolio.pos > 0 ){
-            // Sell signal 
+            // If we have assets, sell all 
             m_dispatcher.schedule(events::OrderEvent{event.epoch,event.side,m_portfolio.pos});
         }
+
     }
 
     private:
