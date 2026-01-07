@@ -1,5 +1,20 @@
 // dispatcher.hpp, created by Andrew Gossen.
 
+// ----
+// 
+// This is the core dispatch system for the backtesting engine
+// Holds a dispatch class, which owns the central event queue using a fixed-capacity
+// ringbuffer, and dispatches events to the appropraite handler function (in the pipeline folder)
+
+// Used to store events in a ring-buffer for later dispatching. Events are dispatched in this order : 
+    // HANDLER FUNCTION | EVENT TAKEN -> EVENT GIVEN 
+    // StrategyHandler - ( MarketEvent -> SignalEvent)
+    // RiskHandler - ( SignalEvent -> OrderEvent )
+    // ExcecutionHandler - (OrderEvent -> FillEvent )
+    // PortfolioHandler - ( FillEvent -> Final action ) 
+
+// --- 
+
 #pragma once 
 #include <vector>
 #include <functional>
@@ -11,7 +26,6 @@
 #include "events/ring_buffer.hpp"
 #include "data/market_state.hpp"
 #include "backtesting/backtesting.hpp"
-
 #include "pipeline/strategy_handler.hpp"
 #include "pipeline/risk_handler.hpp"
 #include "pipeline/portfolio_handler.hpp"
@@ -23,11 +37,6 @@ namespace events{
 
 template <std::size_t capacity>
 class Dispatcher{
-
-    // StrategyHandler - ( MarketEvent -> SignalEvent)
-    // RiskHandler - ( SignalEvent -> OrderEvent )
-    // ExcecutionHandler - (OrderEvent -> FillEvent )
-    // PortfolioHandler - ( FillEvent -> Final action ) 
 
     public:
 
@@ -45,14 +54,14 @@ class Dispatcher{
         return m_queue.push(std::move(ev));
     }
 
-    void run(){  // Dispatch all events in the ringbuffer ( Calls 'on' )
+    void run(){  // Dispatch all events in the ringbuffer ( Calling an overloaded 'on' function )
         Event e;
         while (m_queue.pop(e)){
             dispatch(e);
         }
     }
 
-    // Overload 'on' functions to run the appropraite handler 
+    // Overload 'on' functions to run the appropriate handler 
     void on(const events::MarketEvent& ev) { m_handlerStrat.on(ev); m_handlerReport.setEquity(); } 
     void on(const events::SignalEvent& ev) { m_handlerRisk.on(ev); }
     void on(const events::OrderEvent& ev) { m_handlerExce.on(ev); }
@@ -65,7 +74,7 @@ class Dispatcher{
     private: 
 
     void dispatch(Event& e){ // Will dispatch an event, i.e. run the appropriate handler through overload resolution 
-        std::visit( // Pass the variant value directly into the lambda and call appropriate ocerloaded on function
+        std::visit( // Pass the variant's contaiend value directly into lambda 
             [this](auto const& event){
                 this->on(event);
             },
@@ -81,9 +90,6 @@ class Dispatcher{
     PortfolioHandler m_handlerPort;
     ReportHandler m_handlerReport;
 
-    
-
 };
-
 
 }

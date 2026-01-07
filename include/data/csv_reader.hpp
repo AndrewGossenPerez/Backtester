@@ -1,4 +1,11 @@
 
+// csv_reader.hpp, created by Andrew Gossen.
+
+// ----
+// Stores the csvReader class
+// which holds the loadsBars function for csv ingestion 
+// ----
+
 #pragma once 
 #include <vector>
 #include <string>

@@ -1,3 +1,8 @@
+// market_state.hpp, created by Andrew Gossen.
+
+// ----
+// Simply stores the current and next bar  
+//
 
 #pragma once 
 #include "core/types.hpp"

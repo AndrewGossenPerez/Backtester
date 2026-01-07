@@ -1,3 +1,8 @@
+// types.hpp, created by Andrew Gossen.
+
+// ----
+// Gives standard types trading aliases for clarity 
+// ---- 
 
 #pragma once 
 #include <cstdint>

@@ -1,5 +1,9 @@
 // events.hpp, created by Andrew Gossen.
 
+// ----
+// Establishes each event's metadats struct 
+// ---- 
+
 #pragma once
 #include <variant>
 #include "core/types.hpp"

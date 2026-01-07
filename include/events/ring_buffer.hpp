@@ -1,3 +1,8 @@
+// ring_buffer.hpp, created by Andrew Gossen.
+
+// ----
+// This is a custom fixed capacity ring buffer, used to queue events for the dispatcher 
+// ---- 
 
 #pragma once 
 #include <cstddef>

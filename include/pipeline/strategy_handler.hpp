@@ -1,3 +1,10 @@
+// strategy_handler.hpp, created by Andrew Gossen.
+
+// ---- 
+// Applies the given strategy for a bar
+// Will return a SignalEvent with the side as Buy/Sell/HOld  
+// according to whatever the strategy decides 
+// --- 
 
 #pragma once 
 #include "data/market_state.hpp"

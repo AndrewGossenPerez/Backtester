@@ -1,3 +1,10 @@
+// excecution_handler.hpp, created by Andrew Gossen.
+
+// ----
+// The excecution handler takes an OrderEvent (Request to fill)
+// Applies a slippage to reflect buy/sell discrepancy, and a fill fee
+// Then schedules a fill event, to cause a buy/sell on the Portfolio itself 
+// ---- 
 
 #pragma once 
 #include "backtesting/excecution.hpp"

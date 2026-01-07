@@ -1,3 +1,11 @@
+// risk_handler.hpp
+
+// ----
+// Takes on a SignalEvent from a strategy (Buy/Sell/Hold)
+// Applies a position-gate risk layer, i.e. if we have no shares buy one
+// else sell all shares 
+// Will schedule the actual OrderEvent (Buy/Sell) depending on this risk layer 
+// ---- 
 
 #pragma once 
 #include "events/dispatcher.hpp"

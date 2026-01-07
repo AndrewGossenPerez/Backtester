@@ -1,3 +1,9 @@
+// portfolio.hpp, created by Andrew Gossen.
+
+// ----
+// Holds the Portfolio struct with member functions to buy/sell 
+// return equity and set equity 
+// ----
 
 #pragma once 
 #include "core/types.hpp"

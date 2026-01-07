@@ -1,3 +1,8 @@
+// bar.hpp, created by Andrew Gossen.
+
+// ----
+// Stores bar metadata 
+// ----
 
 #pragma once 
 #include "core/types.hpp"
@@ -5,7 +10,7 @@
 namespace trd{
 
     struct Bar{
-        timestamp epoch; // GMT + 12:00
+        timestamp epoch; 
         price open,high,low,close;
         quantity volume;
     };
