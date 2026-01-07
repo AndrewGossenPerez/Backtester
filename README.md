@@ -1,4 +1,6 @@
 
+<img width="250" height="250" alt="TradingEngine" src="https://github.com/user-attachments/assets/0f72cd40-f343-4f2a-b395-2ad8be74c60e" />
+
 **A work-in-progress trading engine with a C++ backtester and a Python front-end data visualisation/plotting.**
 --
 
