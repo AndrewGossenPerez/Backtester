@@ -81,28 +81,33 @@ static int64_t days_from_civil(unsigned y, unsigned m, unsigned d) {
     return static_cast<int64_t>(era) * 146097 + static_cast<int64_t>(doe) - 719468;
 }
 
-static bool parseYMD(const char*&p,const char* end, trd::timestamp& out){
+static bool parseYMD(bool epochGiven,const char*&p,const char* end, trd::timestamp& out){
 
     // At this point, we are at the start of a row, i.e. 2010-01-04, 
-    // Parse a YY-MM-DD into an int64_t epoch nanosecond timestmap ( UTC ) 
-    
-    // Firstly, validate format with cheap checks
-    if (end - p < 10) return false;
-    if (p[4] != '-' || p[7] != '-') return false;
+    // Parse a YY-MM-DD into an int64_t epoch second timestamp ( UTC ) 
 
-    // Apply digit math to the col
-    unsigned y,m,d;
-    y=digit(p[0])*1000 + digit(p[1])*100 + digit(p[2])*10 + digit(p[3]);
-    p+=5;
-    m=digit(p[0])*10+digit(p[1]);
-    p+=3;
-    d=digit(p[0])*10+digit(p[1]);
-    p+=3;
+    if (!epochGiven){ // In YYYY-MM-DD format 
+        // Firstly, validate format with cheap checks
+        if (end - p < 10) return false;
+        if (p[4] != '-' || p[7] != '-') return false;
 
-    // Convert to an epoch
-    int64_t days = days_from_civil(y, m, d);
-    int64_t seconds = days * 86400;
-    out=seconds * 1'000'000'000LL; 
+        // Apply digit math to the col
+        unsigned y,m,d;
+        y=digit(p[0])*1000 + digit(p[1])*100 + digit(p[2])*10 + digit(p[3]);
+        p+=5;
+        m=digit(p[0])*10+digit(p[1]);
+        p+=3;
+        d=digit(p[0])*10+digit(p[1]);
+        p+=3;
+
+        // Convert to an epoch (in seconds)
+        int64_t days = days_from_civil(y, m, d);
+        int64_t seconds = days * 86400;
+        out=seconds; 
+
+    } else{ 
+        parseOHLCV(p,end,out);
+    }
 
     return true;
     
@@ -110,7 +115,7 @@ static bool parseYMD(const char*&p,const char* end, trd::timestamp& out){
 
 // -- Defined method functions
 
-std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
+std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file,bool epochGiven){
 
     std::string fileContents=readFile(file); // Load a string buffer for the csv 
     
@@ -137,7 +142,7 @@ std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
         trd::Bar bar; 
         int membersInitialised{0}; // If less than 6 members were initialised, bar is corrupted
 
-        membersInitialised+=parseYMD(p,end,bar.epoch);
+        membersInitialised+=parseYMD(epochGiven,p,end,bar.epoch);
         membersInitialised+=parseOHLCV(p,end,bar.open);
         membersInitialised+=parseOHLCV(p,end,bar.high);
         membersInitialised+=parseOHLCV(p,end,bar.low);

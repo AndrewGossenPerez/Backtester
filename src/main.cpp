@@ -13,7 +13,7 @@ int main() {
 
     using clock = std::chrono::steady_clock;
 
-    std::printf("--- BACK TEST STARTING ---\n");
+    std::printf("--- BACK TEST BENCHMARK STARTING :) ---\n");
 
     trd::price startingEquity{100'000};
     trd::csvReader reader;
@@ -24,62 +24,61 @@ int main() {
     CoinFlipStrategy strat; 
     trd::Backtest bt(portfolio, exce);
 
+    std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv",false);
+
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/Bitcoin.csv",true);
     auto t2CSV = clock::now();
 
-    double secondsCSV = std::chrono::duration<double>(t2CSV - t1CSV).count();
-    const double barsProcessed = (bars.size() >= 2) ? double(bars.size() - 1) : 0.0;
+    std::printf("-- BARS LOADED -- ");
 
-    // Backtesting warmup
+    double secondsCSV = std::chrono::duration<double>(t2CSV - t1CSV).count();
+    const double barsProcessed = (mainBars.size() >= 2) ? double(mainBars.size() - 1) : 0.0;
+
+    // Backtesting warmup against a small csv 
     for (int i = 0; i < 5; ++i) {
         portfolio.setEquity(startingEquity);
-        bt.run(bars, strat);
+        bt.run(testBars, strat);
     }
 
-    // Measures N runs
-    constexpr int N = 500;
+    std::printf(" WARMUP COMPLETE, TESTING MAIN DATA -- \n");
+
+    // Measure N backtest Runs 
+    constexpr int N = 100;
     std::vector<double> secs;
     std::vector<double> fills;
     secs.reserve(N);
     fills.reserve(N);
 
-    volatile double sink = 0.0;
-
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i < N; ++i) { // Backtest N times against the actual data 
         portfolio.setEquity(startingEquity);
-
         auto t1 = clock::now();
-        trd::Result re = bt.run(bars, strat);
+        trd::Result re = bt.run(mainBars, strat);
         auto t2 = clock::now();
-
         double s = std::chrono::duration<double>(t2 - t1).count();
         secs.push_back(s);
         fills.push_back(double(re.trades.size()));
-        sink += re.finalEquity;
     }
 
     std::vector<double> secs_sorted = secs;
     std::sort(secs_sorted.begin(), secs_sorted.end());
 
-    auto median = secs_sorted[secs_sorted.size() / 2];
+    // Median, p90, max and min backtest elapsed time 
+    auto median= secs_sorted[secs_sorted.size() / 2];
     auto p90 = secs_sorted[(secs_sorted.size() * 90) / 100];
     auto minT = secs_sorted.front();
     auto maxT = secs_sorted.back();
 
-    // Median fills 
+    // Median amount of fills excecued
     std::vector<double> fills_sorted = fills;
     std::sort(fills_sorted.begin(), fills_sorted.end());
     double medianFills = fills_sorted[fills_sorted.size() / 2];
 
-    // Throughput from median time
+    // Throughput calculation from median time
     double barsPerSecMedian = barsProcessed / median;
     double barsPerSecP90 = barsProcessed / p90;
     double fillsPerSecMedian = medianFills / median;
-
-    portfolio.setEquity(startingEquity);
-    trd::Result re=bt.run(bars,strat);
 
     std::cout << "\n--- BENCHMARKS BACKTESTER (" << N << " runs) ---\n";
     std::printf("[median time]: %.9f s\n", median);
@@ -90,10 +89,7 @@ int main() {
     std::printf("[median fills]: %.0f\n", medianFills);
     std::printf("[median fills/sec]: %.0f\n", fillsPerSecMedian);
     std::cout << "\n--- BENCHMARKS CSV INGESTION ---\n";
-    std::printf("[bars/sec]: %.0f\n", (bars.size() / secondsCSV));
+    std::printf("[bars/sec]: %.0f\n", (mainBars.size() / secondsCSV));
     std::printf("[elapsed]: %.9f s\n", secondsCSV);
-
-    // stop unused warning
-    (void)sink;
 
 }

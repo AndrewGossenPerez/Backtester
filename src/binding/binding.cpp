@@ -12,7 +12,7 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/Bitcoin.csv",true);
     Portfolio p;
     p.setEquity(startingEquity);
 
