@@ -14,7 +14,5 @@ A work-in-progress trading engine with a C++ backtester and a Python front-end f
 - [x] Modular strategy framework  
 - [x] Historical CSV market data ingestion
 - [X] Backtesting engine (Event-driven architecture) 
-- [ ] Trade logging & performance analytics  
-- [ ] Config-driven system (strategies, instruments, risk parameters)  
-- [ ] Python Interface
+- [X] Python Interface (WIP)
 - [ ] Optimisation 
