@@ -12,3 +12,6 @@ Makefile
 __pycache__/
 *.pyc
 .venv/
+
+# My own stuff
+.vscode/
