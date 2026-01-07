@@ -1,10 +1,14 @@
-# macOS
-.DS_Store
-
-# my editor
-.vscode/
-
-# build output
+# Build directories
 build/
-*.o
-*.out
+build_py/
+
+# CMake artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Python
+__pycache__/
+*.pyc
+.venv/
