@@ -13,10 +13,8 @@
 - **Median runtime:** 4.01 s  
 - **P90 runtime:** 4.20 s  
 - **Min / Max:** 3.71 s / 4.54 s  
-- **Median throughput:** **1.84M bars/s**  
-- **P90 throughput:** **1.76M bars/s**  
-- **Median fills processed:** 3.68M  
-- **Median fills/sec:** **919K**
+- **Median throughput:** **2.66M bars/s**  
+- **P90 throughput:** **2.48M bars/s**  
 
 ### CSV Ingestion
 - **Throughput:** **5M bars/s** (With Epoch given)
