@@ -19,7 +19,7 @@
 - **Median fills/sec:** **919K**
 
 ### CSV Ingestion
-- **Throughput:** **2.42M bars/s**
+- **Throughput:** **5M bars/s** (With Epoch given)
 - **Elapsed:** 3.04 s
 
 *Dataset: ~7.6M-row Bitcoin OHLCV dataset, Coinflip strategy.*
