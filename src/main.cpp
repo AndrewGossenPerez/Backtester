@@ -50,7 +50,7 @@ int main() {
     std::printf(" WARMUP COMPLETE, TESTING MAIN DATA -- \n");
 
     // Measure N backtest Runs 
-    constexpr int N = 100;
+    constexpr int N = 1;
     std::vector<double> secs;
     std::vector<double> fills;
     secs.reserve(N);

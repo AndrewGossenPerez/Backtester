@@ -6,57 +6,57 @@
 
 #pragma once 
 #include <cstddef>
+#include <array>
+#include <utility>
 
 template <typename T, std::size_t capacity>
 class RingBuffer{
 
+    static_assert(capacity > 0, "Ring Buffer capacity must be > 0");
+
     public:
 
-    bool push(T&& el){ 
+    template<class U>
+    bool push(U&& el) { // Perfect forwarding to accept any element, lvalue or rvalue 
         if (full()) return false;
-        m_buffer[m_tail]=std::move(el); // Move into the buffer 
-        m_tail=increment(m_tail);
+        m_buffer[m_tail] = std::forward<U>(el); // If rvalue will move, else copies 
+        m_tail = increment(m_tail);
         ++m_count;
         return true;
     }
 
-    bool push(T const& el){  
-        if (full()) return false;
-        m_buffer[m_tail]=el; // Copies into the buffer 
-        m_tail=increment(m_tail);
-        ++m_count;
-        return true;
-    }
-
-    bool pop(T& el){
-        if (empty()) return false; 
-        el=std::move(m_buffer[m_head]);
-        m_head=increment(m_head);
+    bool pop(T& el) {
+        if (empty()) return false;
+        el = std::move(m_buffer[m_head]);
+        m_head = increment(m_head);
         --m_count;
         return true;
     }
 
     // Checks
-    bool full() const{
+    constexpr bool full() const noexcept {
         return (m_count==capacity);
     }
-    bool empty() const { 
+    constexpr bool empty() const noexcept { 
         return (m_count==0);
     }
 
     // Getter
-    std::size_t size() const { 
+    std::size_t size() const noexcept { 
         return m_count;
     }
 
-    static constexpr std::size_t getCapacity(){
+    static constexpr std::size_t getCapacity() noexcept {
         return capacity;
     }
 
     private:
-
-    static constexpr std::size_t increment(std::size_t i){
-        return (i+1)%capacity; // Wrap around indexing
+    
+    static constexpr std::size_t increment(std::size_t i) noexcept { 
+        // Faster implementation of wrap-around indexing avoiding division
+        ++i;
+        if (i == capacity) i = 0;
+        return i;
     }
 
     std::array<T,capacity> m_buffer{};

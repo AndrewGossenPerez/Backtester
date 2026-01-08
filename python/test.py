@@ -30,10 +30,10 @@ startingEpoch = pts[0].epoch
 
 # -- X axis
 if inTime:
-    title = "Equity Curve vs Time (days elapsed)"
+    title = "Equity vs Time (days elapsed)"
     # Epoch is in 
     x = [(p.epoch - startingEpoch) / (86400) for p in pts]
-    xlabel = "Days elapsed"
+    xlabel = "Days elapsed since first bar"
 else:
     title = "Equity per bar"
     x = list(range(len(pts)))
