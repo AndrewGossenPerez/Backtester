@@ -27,4 +27,5 @@
 - [x] Historical CSV market-data ingestion
 - [x] Event-driven backtesting engine
 - [x] Python interface (WIP)
+- [ ] Fixed Fractional Risk Handler with a stopping system
 - [ ] Optimisation
