@@ -11,8 +11,10 @@
 namespace trd{
 
 struct MarketState{
+    trd::Bar prev{};
     trd::Bar current{};
     trd::Bar next{};
+    bool hasPrev{false};
 };
 
 }

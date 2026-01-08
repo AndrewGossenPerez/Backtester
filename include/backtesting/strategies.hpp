@@ -53,11 +53,13 @@ class BuyAndHold : public Strategy { // Buy once then hold forever
     BuyAndHold() = default;
 
     Signal onBar(const trd::Bar&) override {
+
         if (!m_hasBought) {
             m_hasBought = true;
             return { trd::Side::Buy };   
         }
         return { trd::Side::Hold };   
+        
     }
 
     private:
@@ -65,3 +67,4 @@ class BuyAndHold : public Strategy { // Buy once then hold forever
     bool m_hasBought = false;
 
 };
+

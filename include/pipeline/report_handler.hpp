@@ -12,6 +12,7 @@
 #include "data/market_state.hpp"
 #include "core/portfolio.hpp"
 #include "backtesting/backtesting.hpp"
+#include "utility/scaler.hpp"
 #include <vector>
 #include <iostream>
 
@@ -26,11 +27,11 @@ class ReportHandler{
 
         // Trade was completed, log this trade 
         m_trades.emplace_back( 
-                event.epoch,
-                event.side,
-                event.qty,
-                event.px,
-                event.fee
+            event.epoch,
+            event.side,
+            event.qty,
+            event.px,
+            event.fee
         );
 
         m_result.netFees+=event.fee;
@@ -41,7 +42,7 @@ class ReportHandler{
         m_equityCurve.emplace_back( 
             m_marketState.current.epoch,
             m_portfolio.equity(m_marketState.current.close),
-            m_portfolio.pos
+            descaleQty(m_portfolio.pos) 
         );
     }
 

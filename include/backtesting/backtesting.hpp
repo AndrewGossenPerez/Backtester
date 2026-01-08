@@ -69,14 +69,14 @@ class Backtest{
 
     public:
 
-    Backtest(Portfolio& portfolio,Excecution& exce) : m_portfolio(portfolio), m_exce(exce) {} 
+    Backtest(Portfolio& portfolio) : m_portfolio(portfolio) {}
 
     Result run(const std::vector<trd::Bar>& bars,Strategy& strategy);
 
     private: 
 
     Portfolio& m_portfolio;
-    Excecution& m_exce;
+    Excecution m_exce;
 
 };
 

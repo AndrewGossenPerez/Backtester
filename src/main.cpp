@@ -25,29 +25,19 @@ int main() {
 
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
-    Excecution exce(1.0);
-    CoinFlipStrategy strat; 
-    trd::Backtest bt(portfolio, exce);
 
-    std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
+    CoinFlipStrategy strat; 
+    trd::Backtest bt(portfolio);
 
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/Bitcoin.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/aapl.csv");
     auto t2CSV = clock::now();
 
     std::printf("-- BARS LOADED -- ");
 
     double secondsCSV = std::chrono::duration<double>(t2CSV - t1CSV).count();
     const double barsProcessed = (mainBars.size() >= 2) ? double(mainBars.size() - 1) : 0.0;
-
-    // Backtesting warmup against a small csv 
-    for (int i = 0; i < 5; ++i) {
-        portfolio.setEquity(startingEquity);
-        bt.run(testBars, strat);
-    }
-
-    std::printf(" WARMUP COMPLETE, TESTING MAIN DATA -- \n");
 
     // Measure N backtest Runs 
     constexpr int N = 1;
@@ -56,6 +46,7 @@ int main() {
     secs.reserve(N);
     fills.reserve(N);
     trd::Result re; 
+    
     for (int i = 0; i < N; ++i) { // Backtest N times against the actual data 
         portfolio.setEquity(startingEquity);
         auto t1 = clock::now();

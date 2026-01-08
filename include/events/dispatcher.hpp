@@ -32,6 +32,7 @@
 #include "pipeline/excecution_handler.hpp"
 #include "pipeline/trace_handler.hpp"
 #include "pipeline/report_handler.hpp"
+#include "pipeline/stop_manager.hpp"
 
 namespace events{
 
@@ -42,15 +43,18 @@ class Dispatcher{
 
     Dispatcher(Excecution& exce,Strategy& strat,trd::MarketState& marketState,Portfolio& portfolio,trd::Result& result) : 
     m_handlerStrat(strat,*this),
-    m_handlerRisk(portfolio,*this),
+    m_handlerRisk(portfolio,marketState,*this),
     m_handlerExce(exce,marketState,*this),
     m_handlerPort(portfolio),
-    m_handlerReport(marketState,portfolio,result)
-    {}
+    m_handlerReport(marketState,portfolio,result),
+    m_handlerStop(*this,portfolio,marketState)
+    {
+        m_handlerRisk.current=FixedFractionalRisk;
+    }
 
     using queue=RingBuffer<Event,capacity>;
 
-    bool schedule(Event ev){ // Schedule an event, i.e. add to the ring-buffer to be dispatched 
+    bool schedule(Event&& ev){ // Schedule an event, i.e. add to the ring-buffer to be dispatched 
         return m_queue.push(std::move(ev));
     }
 
@@ -62,14 +66,19 @@ class Dispatcher{
     }
 
     // Overload 'on' functions to run the appropriate handler 
-    void on(const events::MarketEvent& ev) { m_handlerStrat.on(ev); m_handlerReport.setEquity(); } 
-    void on(const events::SignalEvent& ev) { m_handlerRisk.on(ev); }
-    void on(const events::OrderEvent& ev) { m_handlerExce.on(ev); }
-    void on(const events::FillEvent& ev) { m_handlerPort.on(ev); m_handlerReport.on(ev); }
+    void on(const events::MarketEvent& ev) { 
+        m_handlerStrat.on(ev); m_handlerReport.setEquity();
+        m_handlerStop.on(ev);
+    } 
 
-    ReportHandler getReportHandler(){
-        return m_handlerReport;
-    }
+    void on(const events::SignalEvent& ev) { m_handlerRisk.current(m_handlerRisk,ev); }
+    void on(const events::OrderEvent& ev) { m_handlerExce.on(ev); }
+    void on(const events::FillEvent& ev) { m_handlerPort.on(ev); m_handlerReport.on(ev); m_handlerStop.on(ev); }
+    void on(const events::StopFillEvent& ev) {  m_handlerExce.on(ev); }
+    void on(const events::StopPlanEvent ev) { m_handlerStop.on(ev); }
+
+    // Getters 
+    ReportHandler getReportHandler() const { return m_handlerReport; } 
 
     private: 
 
@@ -85,10 +94,12 @@ class Dispatcher{
     queue m_queue{};
 
     StrategyHandler<Dispatcher> m_handlerStrat;
-    RiskHandler<Dispatcher> m_handlerRisk;
+    RiskData<Dispatcher> m_handlerRisk;
     ExcecutionHandler<Dispatcher> m_handlerExce;
     PortfolioHandler m_handlerPort;
     ReportHandler m_handlerReport;
+    StopHandler<Dispatcher> m_handlerStop;
+    
 
 };
 

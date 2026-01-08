@@ -23,11 +23,9 @@ static trd::Result run_backtest(int startingAmount) {
     Portfolio p;
     p.setEquity(startingEquity);
 
-    Excecution exce(1.0);
-    BuyAndHold strat;
-
-    trd::Backtest bt(p, exce);
-    trd::Result re=bt.run(bars, strat);
+    trd::Backtest bt(p);
+    CoinFlipStrategy s;
+    trd::Result re=bt.run(bars,s);
     std::cout<<re.equityPoints.back().equity;
 
     return re;

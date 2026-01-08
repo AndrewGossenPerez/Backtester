@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(engine_core
     src/backtesting/backtester.cpp
-    src/backtesting/excecution.cpp
     src/data/csv_reader.cpp
 )
 

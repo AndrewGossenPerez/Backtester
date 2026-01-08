@@ -48,12 +48,19 @@ trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strat
 
     // Main loop 
     for (std::size_t i=0; i+1 < bars.size();++i){
-        
+
+        //if (i==10000) break;
+
+        // Only prev and current and used for strategies and risk handling to avoid
+        // look-ahead bias 
+        if (i>0) { marketState.prev=bars[i-1]; marketState.hasPrev=true;}
         marketState.current=bars[i];
-        marketState.next=bars[i+1];
+        marketState.next=bars[i+1]; // Can be used during excecution as this is when an order is already 
+
         // Create marketEvent which will propogate new events through the pipeline
         dispatcher.schedule(events::MarketEvent{marketState.current,marketState.next});
         dispatcher.run();
+
     }
 
     { // Format result 

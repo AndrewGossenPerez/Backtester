@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 def main():
     
     TIME_SCALE = int(te.TIME_SCALE)
-    QTY_SCALE  = int(te.QTY_SCALE)
 
     print("Starting Backtest ...")
     starting_equity = 100_000
@@ -17,14 +16,14 @@ def main():
 
     epoch = np.asarray(d["epoch"], dtype=np.int64)
     equity = np.asarray(d["equity"], dtype=np.float64)
-    pos = np.asarray(d["pos"], dtype=np.int64) / QTY_SCALE  # scaled int -> real qty
+    pos = np.asarray(d["pos"], dtype=np.int64) 
 
     if epoch.size == 0:
         raise RuntimeError("No data returned")
 
     # --- Settings
-    in_time = False # True: x-axis is days elapsed, False: bar index
-    nmax = 1000000 # max points to plot
+    in_time = True # True: x-axis is days elapsed, False: bar index
+    nmax = 10000000 # max points to plot
     step = max(1, epoch.size // nmax)
 
     # --- Downsample
@@ -65,7 +64,7 @@ def main():
     ret = (pnl / starting_equity) * 100.0
 
     ax1.text(
-        0.02, 0.98,
+        0.0, -0.1,
         f"Starting: ${starting_equity:,.0f}\nFinal: ${final_equity:,.2f}\nPnL: ${pnl:,.2f} ({ret:.2f}%)",
         transform=ax1.transAxes,
         va="top",
