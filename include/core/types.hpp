@@ -11,7 +11,7 @@ namespace trd{
 
     using timestamp=std::int64_t; // Epoch in seconds
     using price=double;
-    using quantity=int;
+    using quantity=std::int64_t;
 
     enum Side{
         Buy,Sell,Hold

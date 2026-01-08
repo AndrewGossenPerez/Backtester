@@ -1,81 +1,91 @@
-
-# This is currently just a prototype set up to validate the backtesting
+# plot_equity_pos.py
+# Fast plotting using te.run_arrays() (NumPy arrays) from your pybind module.
 
 import trading_engine as te
+import numpy as np
 import matplotlib.pyplot as plt
 
-# -- Actual Trading Engine 
-print("Starting Backtest ...")
-startingEquity = 100_000
-res = te.run(startingEquity)
+def main():
+    
+    TIME_SCALE = int(te.TIME_SCALE)
+    QTY_SCALE  = int(te.QTY_SCALE)
 
-# --- Settings 
-BARSTEP = 1
-inTime = True  # If set to true then instead of per bar, equity will be versus time ( in days ) 
+    print("Starting Backtest ...")
+    starting_equity = 100_000
+    d = te.run_arrays(starting_equity)
+    print("Back test completed, plotting...")
 
-# -- Visulisation below 
-plt.rcParams.update({
-    "figure.dpi": 140,
-    "axes.titlesize": 14,
-    "axes.labelsize": 12,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-})
+    epoch = np.asarray(d["epoch"], dtype=np.int64)
+    equity = np.asarray(d["equity"], dtype=np.float64)
+    pos = np.asarray(d["pos"], dtype=np.int64) / QTY_SCALE  # scaled int -> real qty
 
-pts = res.equityPoints
-if not pts:
-    raise RuntimeError("No equityPoints returned")
+    if epoch.size == 0:
+        raise RuntimeError("No data returned")
 
-startingEpoch = pts[0].epoch
+    # --- Settings
+    in_time = False # True: x-axis is days elapsed, False: bar index
+    nmax = 1000000 # max points to plot
+    step = max(1, epoch.size // nmax)
 
-# -- X axis
-if inTime:
-    title = "Equity vs Time (days elapsed)"
-    # Epoch is in 
-    x = [(p.epoch - startingEpoch) / (86400) for p in pts]
-    xlabel = "Days elapsed since first bar"
-else:
-    title = "Equity per bar"
-    x = list(range(len(pts)))
-    xlabel = "Bar Index"
+    # --- Downsample
+    epoch_ds = epoch[::step]
+    equity_ds = equity[::step]
+    pos_ds = pos[::step]
 
-# -- Y axis
-y = [p.equity for p in pts]
+    # X axis
+    if in_time:
+        title = "Equity & Position vs Time (days elapsed)"
+        x = (epoch_ds - epoch_ds[0]) / (86400.0 * TIME_SCALE)
+        xlabel = "Days elapsed since first bar"
+    else:
+        title = "Equity & Position per bar"
+        x = np.arange(0, epoch.size, step, dtype=np.int64)
+        xlabel = "Bar Index"
 
-# -- Downsample
-x_ds = x[::BARSTEP]
-y_ds = y[::BARSTEP]
+    # --- Plot styling
+    plt.rcParams.update({
+        "figure.dpi": 140,
+        "axes.titlesize": 14,
+        "axes.labelsize": 12,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+    })
 
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.step(x_ds, y_ds, where="post", linewidth=1.6)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5), sharex=True)
 
-ax.set_title(title)
-ax.set_xlabel(xlabel)
-ax.set_ylabel("Equity ($)")
-ax.ticklabel_format(style="plain", axis="both", useOffset=False)
+    # Equity
+    ax1.plot(x, equity_ds, linewidth=1.2)
+    ax1.set_title(title)
+    ax1.set_ylabel("Equity ($)")
+    ax1.grid(True, which="major", alpha=0.30)
 
-ax.grid(True, which="major", alpha=0.30)
-ax.minorticks_on()
-ax.grid(True, which="minor", alpha=0.12)
+    # Equity stats box (use full-res final equity)
+    final_equity = float(equity[-1])
+    pnl = final_equity - starting_equity
+    ret = (pnl / starting_equity) * 100.0
 
-# Y padding
-ymin, ymax = min(y_ds), max(y_ds)
-pad = (ymax - ymin) * 0.05 if ymax > ymin else 1.0
-ax.set_ylim(ymin - pad, ymax + pad)
+    ax1.text(
+        0.02, 0.98,
+        f"Starting: ${starting_equity:,.0f}\nFinal: ${final_equity:,.2f}\nPnL: ${pnl:,.2f} ({ret:.2f}%)",
+        transform=ax1.transAxes,
+        va="top",
+        ha="left",
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="0.8"),
+    )
 
-finalEquity = y[-1]
-pnl = finalEquity - startingEquity
-ret = (pnl / startingEquity) * 100.0
+    # Position
+    ax2.plot(x, pos_ds, linewidth=1.0)
+    ax2.set_xlabel(xlabel)
+    ax2.set_ylabel("Position")
+    ax2.grid(True, which="major", alpha=0.30)
 
-ax.text(
-    0.02, 0.98,
-    f"Starting: ${startingEquity:,.0f}\nFinal: ${finalEquity:,.2f}\nPnL: ${pnl:,.2f} ({ret:.2f}%)",
-    transform=ax.transAxes,
-    va="top",
-    ha="left",
-    bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="0.8"),
-)
+    # Nice y padding for pos
+    pmin,pmax = float(np.min(pos_ds)), float(np.max(pos_ds))
+    ppad = (pmax - pmin) * 0.05 if pmax > pmin else 1.0
+    ax2.set_ylim(pmin - ppad, pmax + ppad)
 
-#-- Show the final result
-plt.tight_layout()
-plt.show()
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    main()

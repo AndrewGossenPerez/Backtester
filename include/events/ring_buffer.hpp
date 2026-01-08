@@ -16,10 +16,10 @@ class RingBuffer{
 
     public:
 
-    template<class U>
-    bool push(U&& el) { // Perfect forwarding to accept any element, lvalue or rvalue 
+    template<class U> // For reference collapsing 
+    bool push(U&& el) { // Perfect forwarding to preserve value category
         if (full()) return false;
-        m_buffer[m_tail] = std::forward<U>(el); // If rvalue will move, else copies 
+        m_buffer[m_tail] = std::forward<U>(el); // If rvalue will move if possible, else copies (lvalue)
         m_tail = increment(m_tail);
         ++m_count;
         return true;
@@ -59,7 +59,7 @@ class RingBuffer{
         return i;
     }
 
-    std::array<T,capacity> m_buffer{};
+    std::array<T,capacity> m_buffer{}; // Reserve a contiguous buffer of size capacity 
     std::size_t m_head{0}; // Index of the oldest element ( i.e. element to pop ) 
     std::size_t m_tail{0}; // Index to the next free slot ( i.e. where to push to ) 
     std::size_t m_count{0}; // Nnumber of elements in the buffer 

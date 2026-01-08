@@ -35,8 +35,9 @@ struct EquityPoint { // Used to graph equity as a function of time
 
     trd::timestamp epoch;
     trd::price equity;
-    
-    EquityPoint(trd::timestamp e,trd::price eq) : epoch(e), equity(eq) {} 
+    trd::quantity pos;
+
+    EquityPoint(trd::timestamp e,trd::price eq,trd::quantity qty) : epoch(e), equity(eq), pos(qty) {} 
 
 };
 

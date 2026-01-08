@@ -29,11 +29,11 @@ int main() {
     CoinFlipStrategy strat; 
     trd::Backtest bt(portfolio, exce);
 
-    std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv",false);
+    std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/Bitcoin.csv",true);
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/Bitcoin.csv");
     auto t2CSV = clock::now();
 
     std::printf("-- BARS LOADED -- ");
@@ -55,11 +55,11 @@ int main() {
     std::vector<double> fills;
     secs.reserve(N);
     fills.reserve(N);
-
+    trd::Result re; 
     for (int i = 0; i < N; ++i) { // Backtest N times against the actual data 
         portfolio.setEquity(startingEquity);
         auto t1 = clock::now();
-        trd::Result re = bt.run(mainBars, strat);
+        re=bt.run(mainBars, strat);
         auto t2 = clock::now();
         double s = std::chrono::duration<double>(t2 - t1).count();
         secs.push_back(s);
@@ -85,7 +85,12 @@ int main() {
     double barsPerSecP90 = barsProcessed / p90;
     double fillsPerSecMedian = medianFills / median;
 
+    std::cout << "\n--- TRADING RESULTS ---\n";
+    std::printf("[final position]: %.5f assets\n",(double)re.equityPoints.back().pos);
+    std::printf("[final equity]: $%f \n", re.equityPoints.back().equity);
+
     std::cout << "\n--- BENCHMARKS BACKTESTER (" << N << " runs) ---\n";
+    std::printf("[bars loaded]: %zu bars\n", mainBars.size());
     std::printf("[median time]: %.9f s\n", median);
     std::printf("[p90 time]: %.9f s\n", p90);
     std::printf("[min/max]: %.9f / %.9f s\n", minT, maxT);
@@ -93,6 +98,7 @@ int main() {
     std::printf("[p90 bars/sec]: %.0f\n", barsPerSecP90);
     std::printf("[median fills]: %.0f\n", medianFills);
     std::printf("[median fills/sec]: %.0f\n", fillsPerSecMedian);
+
     std::cout << "\n--- BENCHMARKS CSV INGESTION ---\n";
     std::printf("[bars/sec]: %.0f\n", (mainBars.size() / secondsCSV));
     std::printf("[elapsed]: %.9f s\n", secondsCSV);

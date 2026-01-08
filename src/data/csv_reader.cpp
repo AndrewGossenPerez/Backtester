@@ -9,8 +9,6 @@
 //
 // Notes:
 // - Assumes a header row is present and skips the first line
-// - Timestamps are parsed either as YYYY-MM-DD (converted to epoch seconds UTC)
-//   or as a numeric epoch, depending on `epochGiven`
 
 #include "data/csv_reader.hpp"
 #include <iostream> 
@@ -20,6 +18,7 @@
 #include <ctime>
 #include <charconv>
 #include <cstdint>
+#include "data/config.hpp"
 
 static std::string readFile(const std::string& file){
 
@@ -39,6 +38,16 @@ static std::string readFile(const std::string& file){
 
 // --- Utility helpers
 
+static int64_t daysFromEpoch(unsigned y, unsigned m, unsigned d) {
+    // Trasnform YY-MM-DD into an epoch 
+    y -= (m <= 2);
+    const int era = (y >= 0 ? y : y - 399) / 400;
+    const unsigned yoe = static_cast<unsigned>(y - era * 400);   
+    const unsigned doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1; 
+    const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;       
+    return static_cast<int64_t>(era) * 146097 + static_cast<int64_t>(doe) - 719468;
+}
+
 static int digit(char c){ 
     // Convert ASCII char to a digit 
     return c-'0';
@@ -51,7 +60,7 @@ static void nextLine(const char*& p, const char* end){
 }
 
 template<typename T>
-static bool parseOHLCV(const char*&p,const char* end, T& out){
+static bool parseOHLCV(const char*&p,const char* end, T& out){ // General parser 
 
     // Parses the OHLCV columns of a csv (Open,high,low,close,volume)
     double v=0.0;
@@ -84,64 +93,110 @@ static bool parseOHLCV(const char*&p,const char* end, T& out){
 
 }
 
-static int64_t days_from_civil(unsigned y, unsigned m, unsigned d) {
-    // Trasnform YY-MM-DD into an epoch 
-    y -= (m <= 2);
-    const int era = (y >= 0 ? y : y - 399) / 400;
-    const unsigned yoe = static_cast<unsigned>(y - era * 400);   
-    const unsigned doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1; 
-    const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;       
-    return static_cast<int64_t>(era) * 146097 + static_cast<int64_t>(doe) - 719468;
-}
+#include <cstdint>
+#include <limits>
 
-static bool parseYMD(bool epochGiven,const char*&p,const char* end, trd::timestamp& out){
+static bool parseQuantity(const char*& p, const char* end,std::int64_t scale, std::int64_t& out){
 
-    // At this point, we are at the start of a row, i.e. 2010-01-04, 
-    // Parse a YY-MM-DD into an int64_t epoch second timestamp ( UTC ) 
+    if (p >= end) return false;
 
-    if (!epochGiven){ // In YYYY-MM-DD format 
-        // Firstly, validate format with cheap checks
-        if (end - p < 10) return false;
-        if (p[4] != '-' || p[7] != '-') return false;
+    // Must start with digit or '.'
+    if ((*p < '0' || *p > '9') && *p != '.') return false;
 
-        // Apply digit math to the col
-        unsigned y,m,d;
-        y=digit(p[0])*1000 + digit(p[1])*100 + digit(p[2])*10 + digit(p[3]);
-        p+=5;
-        m=digit(p[0])*10+digit(p[1]);
-        p+=3;
-        d=digit(p[0])*10+digit(p[1]);
-        p+=3;
-
-        // Convert to an epoch (in seconds)
-        int64_t days = days_from_civil(y, m, d);
-        int64_t seconds = days * 86400;
-        out=seconds; 
-
-    } else{ 
-        parseOHLCV(p,end,out);
+    // Parse integer part
+    std::int64_t ip = 0;
+    while (p < end && *p >= '0' && *p <= '9') {
+        int d = *p - '0';
+        // overflow check for ip = ip*10 + d
+        if (ip > (std::numeric_limits<std::int64_t>::max() - d) / 10) return false;
+        ip = ip * 10 + d;
+        ++p;
     }
 
+    // Parse fractional part scaled to 'scale'
+    std::int64_t fp = 0;
+    std::int64_t place = scale;
+
+    if (p < end && *p == '.') {
+        ++p;
+        while (p < end && *p >= '0' && *p <= '9') {
+            place /= 10;
+            if (place == 0) return false; // too many fractional digits for this scale
+            fp += (*p - '0') * place;
+            ++p;
+        }
+    }
+
+    // Field delimiter
+    if (p < end && *p == ',') ++p;
+
+    // Combine with overflow check, v = ip* scale + fp
+    if (ip > (std::numeric_limits<std::int64_t>::max() - fp) / scale) return false;
+    out = ip * scale + fp;
     return true;
+
+}
+
+static bool parseTimestampField(const char*& p, const char* end, trd::timestamp& out) {
     
+    // YYYY-MM-DD format 
+    if (end - p >= 10 && p[4] == '-' && p[7] == '-') {
+        unsigned y = digit(p[0])*1000 + digit(p[1])*100 + digit(p[2])*10 + digit(p[3]);
+        unsigned m = digit(p[5])*10 + digit(p[6]);
+        unsigned d = digit(p[8])*10 + digit(p[9]);
+        p += 10;
+        if (p < end && *p == ',') ++p;
+
+        const int64_t days = daysFromEpoch(y, m, d);
+        out = static_cast<trd::timestamp>(days) * 86400 * TS_SCALE;
+        return true;
+    }
+
+    // At this point timestamp is given as an epoch
+
+    if (p >= end || *p < '0' || *p > '9') return false;
+    trd::timestamp secs = 0;
+
+    // Parse the integer seconds
+    do {
+        secs = secs * 10 + (*p - '0');
+        ++p;
+    } while (p < end && *p >= '0' && *p <= '9');
+
+    trd::timestamp frac = 0;
+
+    // Parse the fractional part scaled to TS_SCALE 
+    if (p < end && *p == '.') {
+
+        ++p;
+
+        int digits = 0;
+        while (p < end && *p >= '0' && *p <= '9') {
+            if (digits < 6) { // keep only first 6 digits
+                frac = frac * 10 + (*p - '0');
+                ++digits;
+            }
+            ++p;
+        }
+
+        while (digits < 6) { frac *= 10; ++digits; } // scale to microseconds
+
+    }
+
+    if (p < end && *p == ',') ++p;
+    out = secs * TS_SCALE + frac;
+    return true;
+
 }
 
 // -- Defined method functions
 
-std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file,bool epochGiven){
+std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
 
     std::string fileContents=readFile(file); // Load a string buffer for the csv 
     
-    size_t lines = std::count(
-        fileContents.begin(), fileContents.end(), '\n'
-    ); // Establishes how many bars we need to reserve 
-
     std::vector<trd::Bar> bars;
-    if (fileContents.empty()){
-        throw std::runtime_error("Could not open file.");
-    } else { 
-        bars.reserve(lines);
-    }
+    bars.reserve(fileContents.size());
 
     const char* p = fileContents.data(); // Get first char pointer in the string buffer 
     // Will be incremented to parse through the csv 
@@ -155,14 +210,16 @@ std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file,bool epoc
         trd::Bar bar; 
         int membersInitialised{0}; // If less than 6 members were initialised, bar is corrupted
 
-        membersInitialised+=parseYMD(epochGiven,p,end,bar.epoch);
+        membersInitialised+=parseTimestampField(p,end,bar.epoch);
         membersInitialised+=parseOHLCV(p,end,bar.open);
         membersInitialised+=parseOHLCV(p,end,bar.high);
         membersInitialised+=parseOHLCV(p,end,bar.low);
         membersInitialised+=parseOHLCV(p,end,bar.close);
-        membersInitialised+=parseOHLCV(p,end,bar.volume);
+        trd::quantity vol_ticks;
+        membersInitialised += parseQuantity(p, end, QTY_SCALE, vol_ticks);
+        bar.volume=static_cast<trd::quantity>(vol_ticks); // or make quantity int64_t
 
-        if (membersInitialised==6) bars.emplace_back(bar);
+        if (membersInitialised==6) bars.push_back(std::move(bar));
 
         nextLine(p,end);
 

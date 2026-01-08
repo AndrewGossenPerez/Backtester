@@ -40,7 +40,8 @@ class ReportHandler{
     void setEquity(){
         m_equityCurve.emplace_back( 
             m_marketState.current.epoch,
-            m_portfolio.equity(m_marketState.current.close)
+            m_portfolio.equity(m_marketState.current.close),
+            m_portfolio.pos
         );
     }
 
