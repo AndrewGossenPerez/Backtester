@@ -2,6 +2,8 @@
 
 **Work-in-progress trading engine featuring a C++ event-driven backtester + CSV market-data ingestion, with a Python front-end for visualisation and plotting.**
 
+
+A build system will be added later.
 ---
 
 *Buy-and-hold strategy backtested on Bitcoin OHLCV data and plotted with Matplotlib.*
