@@ -19,14 +19,13 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/Bitcoin.csv");
     Portfolio p;
     p.setEquity(startingEquity);
-
+   
     trd::Backtest bt(p);
-    CoinFlipStrategy s;
-    trd::Result re=bt.run(bars,s);
-    std::cout<<re.equityPoints.back().equity;
+    BuyAndHold strat;
+    trd::Result re=bt.run(bars,strat);
 
     return re;
 

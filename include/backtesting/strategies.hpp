@@ -9,7 +9,10 @@
 #pragma once 
 #include "core/types.hpp"
 #include "data/bar.hpp"
+#include "utility/scaler.hpp"
+#include "events/events.hpp"
 #include <random>
+#include <iostream>
 
 struct Signal{
     trd::Side side=trd::Side::Hold;
@@ -21,30 +24,14 @@ struct Strategy{
 
     virtual ~Strategy()=default;
     virtual Signal onBar(const trd::Bar& bar)=0; // Pure virtual function, 
+    virtual void onFill(const events::FillEvent& ev)=0;
     // each derieved strategy will define it's own way to interpret bars into signals
+
 
 };
 
 // Strategy implementations below 
 
-class CoinFlipStrategy : public Strategy { // Just a simple coin-flip strategy to sanity check the engine 
-
-    public:
-
-    CoinFlipStrategy() : m_rng(std::random_device{}()), m_dist(0, 1) {}
-
-    Signal onBar(const trd::Bar&) override {
-        int flip = m_dist(m_rng);
-        if (flip == 0) return { trd::Side::Buy };
-        else return { trd::Side::Sell };
-    }
-
-    private:
-
-    std::mt19937 m_rng;
-    std::uniform_int_distribution<int> m_dist;
-
-};
 
 class BuyAndHold : public Strategy { // Buy once then hold forever 
 
@@ -52,17 +39,18 @@ class BuyAndHold : public Strategy { // Buy once then hold forever
 
     BuyAndHold() = default;
 
-    Signal onBar(const trd::Bar&) override {
+    Signal onBar(const trd::Bar& bar) override {
 
-        if (!m_hasBought) {
-            m_hasBought = true;
+        if (!m_hasBought && bar.volume>0) {
             return { trd::Side::Buy };   
         }
         return { trd::Side::Hold };   
         
     }
 
-    private:
+    void onFill(const events::FillEvent& ev) override {
+        m_hasBought=true;
+    }
 
     bool m_hasBought = false;
 

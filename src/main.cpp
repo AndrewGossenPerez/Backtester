@@ -26,21 +26,29 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    CoinFlipStrategy strat; 
+    BuyAndHold strat; 
     trd::Backtest bt(portfolio);
+    std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 
     // CSV Ingestion
     auto t1CSV = clock::now();
     std::vector<trd::Bar> mainBars = reader.loadBars("samples/aapl.csv");
     auto t2CSV = clock::now();
 
-    std::printf("-- BARS LOADED -- ");
+    std::printf("\n -- BARS LOADED -- \n");
+
+    std::printf("\n -- ENGINE WARMUP -- \n");
+    for (int i=0;i<100;i++) {
+        bt.run(testBars,strat);
+    }
+    std::printf("\n -- ENGINE WARMUP COMPLETED -- \n");
+
 
     double secondsCSV = std::chrono::duration<double>(t2CSV - t1CSV).count();
     const double barsProcessed = (mainBars.size() >= 2) ? double(mainBars.size() - 1) : 0.0;
 
     // Measure N backtest Runs 
-    constexpr int N = 1;
+    constexpr int N = 50;
     std::vector<double> secs;
     std::vector<double> fills;
     secs.reserve(N);

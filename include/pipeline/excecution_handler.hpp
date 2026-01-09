@@ -3,6 +3,7 @@
 #include "data/market_state.hpp"
 #include "events/events.hpp"
 #include "events/dispatcher.hpp"
+#include <iostream>
 
 template <typename DispatchT>
 class ExcecutionHandler {
@@ -14,7 +15,7 @@ class ExcecutionHandler {
 
     void on(const events::OrderEvent& event) { 
         
-        if (event.qty>m_marketState.next.volume) return;
+        if (descaleQty(event.qty)>m_marketState.next.volume) return;
         
         // Apply slippage and factor in market fee 
         const trd::price px = m_exce.slip(m_marketState.next.open, event.side); // Calculate price after slippage 
@@ -26,17 +27,6 @@ class ExcecutionHandler {
 
     }
     
-    void on(const events::StopFillEvent& e) {
-
-        m_dispatcher.schedule(events::FillEvent{
-            e.epoch,
-            e.side,
-            e.qty,
-            static_cast<trd::price>(e.price),
-            0
-        });
-    }
-
     private:
 
     Excecution& m_exce;

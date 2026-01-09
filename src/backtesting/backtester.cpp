@@ -53,6 +53,7 @@ trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strat
 
         // Only prev and current and used for strategies and risk handling to avoid
         // look-ahead bias 
+        
         if (i>0) { marketState.prev=bars[i-1]; marketState.hasPrev=true;}
         marketState.current=bars[i];
         marketState.next=bars[i+1]; // Can be used during excecution as this is when an order is already 

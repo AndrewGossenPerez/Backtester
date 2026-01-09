@@ -38,6 +38,19 @@ struct RiskData {
 
 };
 
+// Risk Functions 
+
+template <typename DispatchT>
+void FollowThrough(RiskData<DispatchT>& riskData, const events::SignalEvent& event){
+
+    if (event.side!=trd::Side::Hold){
+        riskData.m_dispatcher.schedule(
+            events::OrderEvent{event.epoch, event.side, QTY_SCALE} // Will only fill when vol >=1 
+        );
+    }
+
+}
+
 template <typename DispatchT>
 void TrivialRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event){
 

@@ -33,7 +33,7 @@ struct StopFillEvent {
     double price;
 };
 
-using Event = std::variant<MarketEvent, SignalEvent, OrderEvent, FillEvent,StopPlanEvent,StopFillEvent>;
+using Event = std::variant<MarketEvent, SignalEvent, OrderEvent, FillEvent>;
 
 } 
 

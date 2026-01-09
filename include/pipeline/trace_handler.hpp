@@ -13,9 +13,11 @@
 
 struct TraceHandler {
 
+    TraceHandler()=default;
+
     void on(const events::Event& e) {
 
-        if (++y%i!=0 || !active) return;
+        if (++y%i!=0) return;
         y=0;
 
         if (std::holds_alternative<events::MarketEvent>(e)) {
@@ -34,10 +36,8 @@ struct TraceHandler {
 
     private:
 
-
     int i=1000; // Only show the trace every 'i' bars 
     int y=0;
-    bool active=true;
     
 };
 

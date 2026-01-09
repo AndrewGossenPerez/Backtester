@@ -8,6 +8,7 @@
 #pragma once 
 #include "core/portfolio.hpp"
 #include "events/events.hpp"
+#include "utility/scaler.hpp"
 #include <iostream>
 
 class PortfolioHandler{
