@@ -1,3 +1,11 @@
+// excecution.hpp, created by Andrew Gossen.
+
+// ----
+// Holds utility functions to be used the excecution_handler.hpp in the pipeline
+// Allows for slippage calculation (Simulate the buy/sell price being different at time of 
+// order excecution, causing pure loss for this simulation )
+// ---- 
+
 #pragma once
 #include "core/types.hpp"
 #include "data/config.hpp"
@@ -7,7 +15,7 @@
 
 struct Excecution {
 
-    // Apply deterministic slippage to a reference price ( Simulating price discrepancy causing pure loss )
+    // Apply deterministic slippage to a reference price 
     trd::price slip(trd::price px, trd::Side side) const {
 
         trd::price slippage = px * (SLIP_BPS/1000.0);

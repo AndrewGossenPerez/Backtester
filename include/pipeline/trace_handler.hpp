@@ -9,10 +9,15 @@
 #include <iostream>
 #include <variant>
 #include "events/events.hpp"
+#include "utility/scaler.hpp"
 
 struct TraceHandler {
 
     void on(const events::Event& e) {
+
+        if (++y%i!=0 || !active) return;
+        y=0;
+
         if (std::holds_alternative<events::MarketEvent>(e)) {
             std::cout << "MarketEvent\n";
         } else if (std::holds_alternative<events::SignalEvent>(e)) {
@@ -20,12 +25,19 @@ struct TraceHandler {
             std::cout << "SignalEvent side=" << (int)s.side << "\n";
         } else if (std::holds_alternative<events::OrderEvent>(e)) {
             auto& o = std::get<events::OrderEvent>(e);
-            std::cout << "OrderEvent qty=" << o.qty << "\n";
+            std::cout << "OrderEvent qty=" << descaleQty(o.qty) << "\n";
         } else if (std::holds_alternative<events::FillEvent>(e)) {
             auto& f = std::get<events::FillEvent>(e);
-            std::cout << "FillEvent qty=" << f.qty << " price=" << f.px << " fee=" << f.fee << "\n";
+            std::cout << "FillEvent qty=" << descaleQty(f.qty) << " price=" << f.px << " fee=" << f.fee << "\n";
         }
     }
+
+    private:
+
+
+    int i=1000; // Only show the trace every 'i' bars 
+    int y=0;
+    bool active=true;
     
 };
 

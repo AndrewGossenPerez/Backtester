@@ -1,3 +1,10 @@
+// portfolio.hpp, created by Andrew Gossen.
+
+// ----
+// Notes:
+// For buy/sell, the quantity is assumed to be already scaled to QTY_SCALE
+// ---- 
+
 #pragma once
 #include "core/types.hpp"
 #include "data/config.hpp"
@@ -12,25 +19,19 @@ struct Portfolio {
     trd::quantity pos{0}; 
 
     void buy(trd::quantity qtyScaled, trd::price px, trd::price fee) {
-
         auto qty=descaleQty(qtyScaled);
         auto cost = px*qty+fee;
-
         if (cost>balance) return; // No leverage 
         balance-=cost;
         pos+=qtyScaled;
-
     }
 
     void sell(trd::quantity qtyScaled, trd::price px, trd::price fee) {
-        
         auto qty=descaleQty(qtyScaled);
         auto gain = px*qty-fee;
-
         if (pos<qtyScaled) return; // We don't have the req assets 
         balance+=gain;
         pos-=qtyScaled;
-
     }
 
     trd::price equity(trd::price markPx) const { // Return total portfolio value for a current market price 

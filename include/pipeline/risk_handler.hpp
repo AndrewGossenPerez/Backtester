@@ -39,6 +39,30 @@ struct RiskData {
 };
 
 template <typename DispatchT>
+void TrivialRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event){
+
+    trd::Side side;
+    trd::quantity qty;
+
+    switch (event.side){
+        case trd::Side::Sell: 
+         side=trd::Side::Sell;
+         qty=riskData.m_portfolio.pos;
+         break;
+        case trd::Side::Buy:
+         side=trd::Side::Buy;
+         qty=QTY_SCALE; // Buys one asset 
+         break;
+        default: return;
+    }
+
+    riskData.m_dispatcher.schedule(
+        events::OrderEvent{event.epoch, side, qty}
+    );
+
+}
+
+template <typename DispatchT>
 void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event){
 
     // Risk the same % of equity each time 
