@@ -6,7 +6,7 @@
 A build system will be added later.
 ---
 
-*Buy-and-hold strategy backtested on Bitcoin OHLCV data and plotted with Matplotlib.*
+*Buy-and-hold strategy backtested on Bitcoin OHLCV data and plotted with Matplotlib to sanity check the engine*
 <img width="696" height="341" alt="Screenshot 2026-01-07 at 11 00 34 PM" src="https://github.com/user-attachments/assets/9f97bc82-481f-4348-af3e-b2e4b725d27e" />
 
 ## Benchmarks
@@ -29,5 +29,6 @@ A build system will be added later.
 - [x] Historical CSV market-data ingestion
 - [x] Event-driven backtesting engine
 - [x] Python interface (WIP)
-- [ ] Fixed Fractional Risk Handler with a stopping system
+- [x] Fixed Fractional Risk Handler with a stopping system
+- [ ] Average Moving Cross strategy
 - [ ] Optimisation
