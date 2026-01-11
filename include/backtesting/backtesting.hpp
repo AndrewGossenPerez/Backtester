@@ -76,7 +76,6 @@ class Backtest{
     private: 
 
     Portfolio& m_portfolio;
-    Excecution m_exce;
 
 };
 

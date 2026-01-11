@@ -24,7 +24,7 @@ struct Strategy{
 
     virtual ~Strategy()=default;
     virtual Signal onBar(const trd::Bar& bar)=0; // Pure virtual function, 
-    virtual void onFill(const events::FillEvent& ev)=0;
+    virtual void onFill(const events::FillEvent)=0;
     // each derieved strategy will define it's own way to interpret bars into signals
 
 
@@ -48,7 +48,7 @@ class BuyAndHold : public Strategy { // Buy once then hold forever
         
     }
 
-    void onFill(const events::FillEvent& ev) override {
+    void onFill(const events::FillEvent) override {
         m_hasBought=true;
     }
 

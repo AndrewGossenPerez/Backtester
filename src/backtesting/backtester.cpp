@@ -39,7 +39,7 @@ trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strat
     }
 
     events::Dispatcher<2048> dispatcher(
-        m_exce,strategy,marketState,m_portfolio,result
+        strategy,marketState,m_portfolio,result
     );
 
     // Reserve the stored trades and equity points to their maximum possible value to avoid reallocations

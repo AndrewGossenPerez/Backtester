@@ -41,16 +41,16 @@ class Dispatcher{
 
     public:
 
-    Dispatcher(Excecution& exce,Strategy& strat,trd::MarketState& marketState,Portfolio& portfolio,trd::Result& result) : 
+    Dispatcher(Strategy& strat,trd::MarketState& marketState,Portfolio& portfolio,trd::Result& result) : 
     m_handlerStrat(strat,*this),
     m_handlerRisk(portfolio,marketState,*this),
-    m_handlerExce(exce,marketState,*this),
+    m_handlerExce(marketState,*this),
     m_handlerPort(portfolio),
     m_handlerReport(marketState,portfolio,result),
     m_handlerStop(*this,portfolio,marketState)
     {
         // Set the risk handler
-        m_handlerRisk.current=FollowThrough;
+        m_handlerRisk.current=FixedFractionalRisk<Dispatcher>;
     }
 
     using queue=RingBuffer<Event,capacity>;
@@ -80,7 +80,7 @@ class Dispatcher{
     void on(const events::FillEvent& ev) { 
         m_handlerPort.on(ev); m_handlerReport.on(ev); m_handlerStrat.on(ev);
     } 
-
+    void on(const events::StopPlanEvent& ev){ m_handlerStop.on(ev);}
 
     // Getters 
     ReportHandler getReportHandler() const { return m_handlerReport; } 
