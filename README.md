@@ -7,7 +7,7 @@ A build system will be added later.
 ---
 
 *Buy-and-hold strategy backtested on Bitcoin OHLCV data and plotted with Matplotlib to sanity check the engine*
-<img width="696" height="341" alt="Screenshot 2026-01-07 at 11 00 34 PM" src="https://github.com/user-attachments/assets/9f97bc82-481f-4348-af3e-b2e4b725d27e" />
+<img width="350" height="150" alt="Screenshot 2026-01-07 at 11 00 34 PM" src="https://github.com/user-attachments/assets/9f97bc82-481f-4348-af3e-b2e4b725d27e" />
 
 ## Benchmarks
 
