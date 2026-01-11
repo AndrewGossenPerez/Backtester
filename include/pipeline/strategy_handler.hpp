@@ -20,6 +20,7 @@ class StrategyHandler{
 
     void on(const events::MarketEvent& event){
 
+        m_strat.onMarketData(event);
         Signal signal=m_strat.onBar(event.bar); // Apply strategy on the bar to generate a singal on current bar
 
         if (signal.side!=trd::Side::Hold){
@@ -34,6 +35,8 @@ class StrategyHandler{
     void on(const events::FillEvent& event){ // For buy-hold 
         m_strat.onFill(event);
     }
+
+
 
     private:
 

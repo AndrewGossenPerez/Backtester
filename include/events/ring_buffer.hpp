@@ -46,6 +46,10 @@ class RingBuffer{
         return m_count;
     }
 
+    T& front() noexcept { 
+        return m_buffer[m_head];
+    }
+    
     static constexpr std::size_t getCapacity() noexcept {
         return capacity;
     }

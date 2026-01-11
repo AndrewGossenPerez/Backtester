@@ -19,12 +19,14 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/Bitcoin.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
     Portfolio p;
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-    BuyAndHold strat;
+   // MovingAverageCrossover<50,100> strat; 
+    BuyAndHold strat; 
+
     trd::Result re=bt.run(bars,strat);
 
     return re;

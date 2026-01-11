@@ -165,6 +165,7 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent
         <<" Bar qty:"<<descaleQty(current.volume)<<" Bar Price :"<<current.close << " Bar Epoch: " <<current.epoch <<
         "\n";
     };
+    (void) debug; // stop the warning ( temporary ) 
     //debug();
 
     // ---- Dispatch ( only long for now )

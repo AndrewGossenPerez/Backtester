@@ -26,13 +26,13 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    BuyAndHold strat; 
+    MovingAverageCrossover<24,100> strat; 
     trd::Backtest bt(portfolio);
     std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/Bitcoin.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/aapl.csv");
     auto t2CSV = clock::now();
 
     std::printf("\n -- BARS LOADED -- \n");
@@ -44,7 +44,7 @@ int main() {
         }
         std::printf("\n -- ENGINE WARMUP COMPLETED -- \n");
     };
-
+    (void) warmUp; // stop the warning ( temporary)
     //warmUp();
 
     double secondsCSV = std::chrono::duration<double>(t2CSV - t1CSV).count();
