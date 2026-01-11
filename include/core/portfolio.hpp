@@ -21,9 +21,11 @@ struct Portfolio {
     void buy(trd::quantity qtyScaled, trd::price px, trd::price fee) {
         auto qty=descaleQty(qtyScaled);
         auto cost = px*qty+fee;
+        std::cout << " COST: " <<cost<<" FEE: " << fee<<"\n";
         if (cost>balance) return; // No leverage 
         balance-=cost;
         pos+=qtyScaled;
+        std::cout << "BOUGHT, NEW QTY : " << (double)descaleQty(pos) << "\n";
     }
 
     void sell(trd::quantity qtyScaled, trd::price px, trd::price fee) {

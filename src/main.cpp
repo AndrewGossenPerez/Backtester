@@ -7,6 +7,8 @@
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
 #include "backtesting/backtesting.hpp"
+#include "strats/trendFollower.hpp"
+#include "strats/TF.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -26,7 +28,7 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    MovingAverageCrossover<24,100> strat; 
+    TrendFollowing strat;
     trd::Backtest bt(portfolio);
     std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 
@@ -88,7 +90,7 @@ int main() {
     double fillsPerSecMedian = medianFills / median;
 
     std::cout << "\n--- TRADING RESULTS ---\n";
-    std::printf("[final position]: %.5f assets\n",(double)re.equityPoints.back().pos);
+    std::printf("[final position]: %.5Lf assets\n",descaleQty(portfolio.pos));
     std::printf("[final equity]: $%f \n", re.equityPoints.back().equity);
 
     std::cout << "\n--- BENCHMARKS BACKTESTER (" << N << " runs) ---\n";

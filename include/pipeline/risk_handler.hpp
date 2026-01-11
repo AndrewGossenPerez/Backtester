@@ -25,7 +25,7 @@ struct RiskData {
     double riskFactor=0.01;
     double stopFactor=0.02;
     double volatility=1.0;
-    double slippageBuffer=0.025;
+    double slippageBuffer=0.05;
     // -----------------------------------
 
 
@@ -80,7 +80,15 @@ template <typename DispatchT>
 void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent& event){
 
     // Solely Long-only for now, one position at a time 
-    if (event.side != trd::Side::Buy) return;
+
+    if (event.side == trd::Side::Sell){
+        riskData.m_dispatcher.schedule(events::OrderEvent{ 
+            event.epoch, trd::Side::Sell, riskData.m_portfolio.pos
+         });
+        return;
+    };
+
+    if (event.side==trd::Side::Hold) return;
 
     // One position at a time 
     if (riskData.m_portfolio.pos != 0) return;
@@ -128,28 +136,19 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent
     if (rawQty <= 0.0) return;
 
     // Capital constraint 
-    const double maxAffordableQty =
-        riskData.m_portfolio.balance / current.close;
+    double costPerUnit = current.close * (1.0 + riskData.slippageBuffer); // add expected slippage
+    double maxAffordableQty = riskData.m_portfolio.balance / costPerUnit;
 
     const double cappedQty = std::min(rawQty, maxAffordableQty);
     if (cappedQty <= 0.0) return;
 
-    const trd::quantity scaledQty =static_cast<trd::quantity>(std::floor(cappedQty * QTY_SCALE));
-
-    // If we cannot trade at least 1 unit, do nothing
-    if (scaledQty < 1) return;
-
-    const long double finalQty =
-        static_cast<long double>(scaledQty) /
-        static_cast<long double>(QTY_SCALE);
-
-    // Final risk validation
-    const long double actualRisk = finalQty * static_cast<long double>(effectiveStopDist);
-
-    if (actualRisk > allowableRisk) {
-        // Rounding or constraints violated risk — do not trade
+    const trd::quantity scaledQty=cappedQty*QTY_SCALE;
+    const long double actualRisk = descaleQty(scaledQty) * effectiveStopDist;
+   
+    if (actualRisk>allowableRisk) {
         return;
     }
+
 
     // Stop price
     const double entryPrice = current.close;
@@ -159,14 +158,6 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent
         // Don't enter a position if the stop would be immediately hit 
         return;
     }
-
-    auto debug=[&]() {
-        std::cout <<  "-FFR-\n stopPrice:"<<stopPrice<<" Qty:"<<descaleQty(scaledQty)<<" allowableRisk:"<<allowableRisk
-        <<" Bar qty:"<<descaleQty(current.volume)<<" Bar Price :"<<current.close << " Bar Epoch: " <<current.epoch <<
-        "\n";
-    };
-    (void) debug; // stop the warning ( temporary ) 
-    //debug();
 
     // ---- Dispatch ( only long for now )
     riskData.m_dispatcher.schedule(events::OrderEvent{ event.epoch, trd::Side::Buy, scaledQty });

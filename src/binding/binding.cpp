@@ -13,32 +13,52 @@
 #include "data/config.hpp"
 #include <cstdint>
 
+#include "strats/trendFollower.hpp"
+
 namespace py = pybind11;
 
 static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/Bitcoin.csv");
+    std::cout<< "BARS SIZE : " << bars.size();
     Portfolio p;
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-   // MovingAverageCrossover<50,100> strat; 
-    BuyAndHold strat; 
+
+    TrendFollowing<10,30> strat;
+    //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);
-
     return re;
 
+}
+
+static py::list tradelogs_to_pylist(const std::vector<trd::TradeLog>& trades) {
+    py::list py_trades;
+
+    for (const auto& t : trades) {
+        py::dict d;
+        d["epoch"] = static_cast<std::int64_t>(t.epoch);
+        d["side"]  = static_cast<int>(t.side);    // 0=Hold,1=Buy,2=Sell
+        d["qty"]   = static_cast<double>(t.qty);
+        d["price"] = static_cast<double>(t.price);
+        d["fee"]   = static_cast<double>(t.fee);
+        py_trades.append(d);
+    }
+
+    return py_trades;
 }
 
 static py::dict result_arrays(const trd::Result& r) {
 
     const auto& pts = r.equityPoints;
+    const auto& trds = r.trades;  // std::vector<TradeLog>
+
     const py::ssize_t n = static_cast<py::ssize_t>(pts.size());
 
-    // Adjust dtypes if your actual member types differ
     auto epoch = py::array_t<std::int64_t>(n);
     auto equity = py::array_t<double>(n);
     auto pos = py::array_t<std::int64_t>(n);
@@ -54,13 +74,14 @@ static py::dict result_arrays(const trd::Result& r) {
     }
 
     py::dict d;
-    d["epoch"]=std::move(epoch);
-    d["equity"]=std::move(equity);
-    d["pos"] =std::move(pos);
+    d["epoch"] = std::move(epoch);
+    d["equity"] = std::move(equity);
+    d["pos"] = std::move(pos);
+    d["trades"] = tradelogs_to_pylist(trds);
 
     return d;
-
 }
+
 
 PYBIND11_MODULE(trading_engine, m) {
 

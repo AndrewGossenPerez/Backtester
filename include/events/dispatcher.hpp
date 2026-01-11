@@ -44,7 +44,7 @@ class Dispatcher{
     Dispatcher(Strategy& strat,trd::MarketState& marketState,Portfolio& portfolio,trd::Result& result) : 
     m_handlerStrat(strat,*this),
     m_handlerRisk(portfolio,marketState,*this),
-    m_handlerExce(marketState,*this),
+    m_handlerExce(marketState,portfolio,*this),
     m_handlerPort(portfolio),
     m_handlerReport(marketState,portfolio,result),
     m_handlerStop(*this,portfolio,marketState)

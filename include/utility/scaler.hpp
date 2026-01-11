@@ -10,6 +10,6 @@
 #include "data/config.hpp"
 
 inline long double descaleQty(trd::quantity scaledQty){
-    return scaledQty/QTY_SCALE;
+    return scaledQty/(static_cast<double>(QTY_SCALE));
 }
 

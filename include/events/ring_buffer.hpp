@@ -33,6 +33,19 @@ class RingBuffer{
         return true;
     }
 
+    template<class U>
+    void overwrite(U&& el) {
+        if (!full()) {
+            push(std::forward<U>(el));
+        } else {
+            // Overwrite oldest element and advance
+            m_buffer[m_head] = std::forward<U>(el);
+            m_head = increment(m_head);
+            m_tail = increment(m_tail);
+            // m_count stays the same
+        }
+    }
+
     // Checks
     constexpr bool full() const noexcept {
         return (m_count==capacity);
@@ -49,7 +62,7 @@ class RingBuffer{
     T& front() noexcept { 
         return m_buffer[m_head];
     }
-    
+
     static constexpr std::size_t getCapacity() noexcept {
         return capacity;
     }
