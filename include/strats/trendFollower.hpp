@@ -24,5 +24,6 @@ class TrendFollowing : public Strategy {
 
     RingBuffer<trd::price, NFast> m_Fast;
     RingBuffer<trd::price, NSlow> m_Slow;
+    trd::Side currentSignal{trd::Side::Hold};
 
 };

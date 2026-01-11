@@ -12,7 +12,6 @@
 #include "utility/scaler.hpp"
 #include "events/events.hpp"
 #include "events/ring_buffer.hpp"
-#include "backtesting/EMA.hpp"
 #include <random>
 #include <iostream>
 

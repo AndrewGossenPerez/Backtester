@@ -8,7 +8,6 @@
 #include "backtesting/backtesting.hpp"
 #include "backtesting/backtesting.hpp"
 #include "strats/trendFollower.hpp"
-#include "strats/TF.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -28,7 +27,7 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    TrendFollowing strat;
+    BuyAndHold strat;
     trd::Backtest bt(portfolio);
     std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 

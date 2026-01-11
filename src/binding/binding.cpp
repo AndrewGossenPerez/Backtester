@@ -28,8 +28,7 @@ static trd::Result run_backtest(int startingAmount) {
    
     trd::Backtest bt(p);
 
-    TrendFollowing<10,30> strat;
-    //BuyAndHold strat;
+    BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);
     return re;
