@@ -26,5 +26,5 @@ A build system will be added later.
 - [x] Event-driven backtesting engine
 - [x] Python interface (WIP)
 - [x] Fixed Fractional Risk Handler with a stopping system
-- [ ] Average Moving Cross strategy
+- [x] EMA (Simple first prototype)
 - [ ] Optimisation
