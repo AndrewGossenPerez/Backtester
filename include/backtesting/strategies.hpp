@@ -45,7 +45,7 @@ class BuyAndHold : public Strategy { // Buy once then hold forever
         return { trd::Side::Hold };     
     }
 
-    void onMarketData(const events::MarketEvent& )override{return;}
+    void onMarketData(const events::MarketEvent& ) override {return;}
 
     void onFill(const events::FillEvent& e) override {
         m_hasBought=(e.side==trd::Side::Buy);

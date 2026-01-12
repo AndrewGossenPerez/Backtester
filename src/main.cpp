@@ -27,7 +27,9 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    ExponentialMovingAverage<12,26> strat(false,0.01);
+    //ExponentialMovingAverage<12,26> strat(false,0.01);
+    BuyAndHold strat;
+    
     trd::Backtest bt(portfolio);
     std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 

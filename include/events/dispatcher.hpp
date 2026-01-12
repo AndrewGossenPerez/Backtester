@@ -51,6 +51,7 @@ class Dispatcher{
     {
         // Set the risk handler
         m_handlerRisk.current=FixedFractionalRisk<Dispatcher>;
+
     }
 
     using queue=RingBuffer<Event,capacity>;
