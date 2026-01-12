@@ -76,6 +76,9 @@ void TrivialRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event
 
 }
 
+constexpr double a=5.5;
+constexpr double b=0.35;
+
 template <typename DispatchT>
 void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent& event){
 
@@ -101,7 +104,7 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent
     const double equity = riskData.m_portfolio.equity(current.close);
     if (equity <= 0.0) return;
 
-    const double allowableRisk = equity * riskData.riskFactor;
+    double allowableRisk = equity * riskData.riskFactor;
     if (allowableRisk <= 0.0) return;
 
     // Stop distance 
@@ -128,6 +131,12 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent
 
     // Slippage / gap buffer (must be >= 0)
     const double effectiveStopDist = stopDist * (1.0 + riskData.slippageBuffer);
+
+    // pnl awareness 
+    double pnlFraction = riskData.m_portfolio.equity(current.close) 
+    / riskData.m_portfolio.startingBalance;
+    double pnlMultiplier = 1.0 / (1.0 + std::exp(a * (pnlFraction - b)));
+    allowableRisk *= pnlMultiplier;
 
     // ---- Position sizing
 

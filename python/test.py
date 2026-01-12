@@ -81,7 +81,10 @@ def main():
     # Nice y padding for pos
     pmin,pmax = float(np.min(pos_ds)), float(np.max(pos_ds))
     ppad = (pmax - pmin) * 0.05 if pmax > pmin else 1.0
-    ax2.set_ylim(pmin - ppad, pmax + ppad)
+    if pmax > pmin:
+        ax2.set_ylim(pmin, pmax)  # no padding
+    else:
+        ax2.set_ylim(pmin - 0.5, pmax + 0.5)  # tiny range if all values equal
 
     plt.tight_layout()
     plt.show()

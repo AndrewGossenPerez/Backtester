@@ -21,8 +21,7 @@ class ExcecutionHandler {
         const trd::price fee=feeFor(event.qty, px); 
         const trd::price cost=px*descaleQty(event.qty)+fee;
         
-        if (event.side==trd::Side::Buy && m_portfolio.balance<cost){
-            std::cout<<"NO LEVERAGE FOR FILL, COST : " << cost << " FEE : " << fee << "\n";
+        if ((event.side==trd::Side::Buy && m_portfolio.balance<cost) || event.qty==0){
             return;
         }
 

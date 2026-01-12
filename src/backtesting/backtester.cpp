@@ -50,6 +50,7 @@ trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strat
     for (std::size_t i=0; i+1 < bars.size();++i){
 
         //if (i==10000) break;
+        if (m_portfolio.balance<=0.0) break;
 
         // Only prev and current and used for strategies and risk handling to avoid
         // look-ahead bias 

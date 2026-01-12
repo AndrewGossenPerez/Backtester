@@ -16,6 +16,7 @@
 struct Portfolio {
 
     trd::price balance{100000.0}; 
+    trd::price startingBalance{0.0}; // Used for pnL 
     trd::quantity pos{0}; 
 
     int i=0;
@@ -24,24 +25,34 @@ struct Portfolio {
 
         auto qty=descaleQty(qtyScaled);
         auto cost = px*qty+fee;
-
         i++;
         balance-=cost;
         pos+=qtyScaled;
+
+        std::cout<< "BUY #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " COST: " << cost << " NEW BALANCE: " << balance << "\n";
     
     }
 
     void sell(trd::quantity qtyScaled, trd::price px, trd::price fee) {
+
         auto qty=descaleQty(qtyScaled);
         auto gain = px*qty-fee;
         balance+=gain;
         pos-=qtyScaled;
+
+        std::cout << "SELL #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " GAIN: " << gain << " NEW BALANCE: " << balance << "\n";
     }
 
     trd::price equity(trd::price markPx) const { // Return total portfolio value for a current market price 
         return balance + (descaleQty(pos) * (long double)markPx);
     }
 
-    void setEquity(trd::price e) { balance = e; }
+    void setEquity(trd::price e) { 
+        balance = e;startingBalance=e;
+     }
+
+    void unrealisedPnL(trd::price markPx){
+       
+    }
 
 };

@@ -27,15 +27,15 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    //ExponentialMovingAverage<12,26> strat(false,0.01);
-    BuyAndHold strat;
-    
+    ExponentialMovingAverage<50,200> strat(true,0.0005);
+    //BuyAndHold strat;
+
     trd::Backtest bt(portfolio);
     std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/BTCREC2.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/Bitcoin.csv");
     auto t2CSV = clock::now();
 
     std::printf("\n -- BARS LOADED -- \n");

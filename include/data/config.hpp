@@ -11,5 +11,5 @@
 constexpr int QTY_SCALE = 100'000'000;
 constexpr trd::timestamp TS_SCALE = 1'000'000; // microseconds
 
-constexpr double SLIP_BPS = 20;  // 0.2 bp = 0.002%
-constexpr double FEE_BPS  = 1; // 0.1 = 0.01%;  
+constexpr double SLIP_BPS = 1;  //  1/1000 
+constexpr double FEE_BPS  = 1; // 1/1000

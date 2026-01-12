@@ -26,8 +26,8 @@ static trd::Result run_backtest(int startingAmount) {
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-    //ExponentialMovingAverage<16,24> strat;
-    BuyAndHold strat;
+    ExponentialMovingAverage<50,200> strat(true,0.001);
+    //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);
     return re;
