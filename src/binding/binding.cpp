@@ -13,7 +13,7 @@
 #include "data/config.hpp"
 #include <cstdint>
 
-#include "strats/trendFollower.hpp"
+#include "strategies/EMA.hpp"
 
 namespace py = pybind11;
 
@@ -21,13 +21,12 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/Bitcoin.csv");
-    std::cout<< "BARS SIZE : " << bars.size();
+    std::vector<trd::Bar> bars = reader.loadBars("samples/BTCREC2.csv");
     Portfolio p;
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-
+    //ExponentialMovingAverage<16,24> strat;
     BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);

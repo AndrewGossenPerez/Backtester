@@ -7,7 +7,7 @@
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
 #include "backtesting/backtesting.hpp"
-#include "strats/trendFollower.hpp"
+#include "strategies/EMA.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -27,13 +27,13 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    BuyAndHold strat;
+    ExponentialMovingAverage<12,26> strat(false,0.01);
     trd::Backtest bt(portfolio);
     std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
 
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/BTCREC2.csv");
     auto t2CSV = clock::now();
 
     std::printf("\n -- BARS LOADED -- \n");

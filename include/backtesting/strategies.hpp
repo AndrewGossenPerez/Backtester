@@ -31,7 +31,8 @@ struct Strategy{
 
 };
 
-// --- Strategy implementations below 
+// --- Very basic sanity check strategy implementations below 
+
 class BuyAndHold : public Strategy { // Buy once then hold forever 
 
     public:
