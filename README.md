@@ -1,4 +1,4 @@
-<img width="150" height="150" alt="TradingEngine" src="https://github.com/user-attachments/assets/0f72cd40-f343-4f2a-b395-2ad8be74c60e" />
+ ,kl.///////////÷÷x ce 4fvr 5vc/<img width="150" height="150" alt="TradingEngine" src="https://github.com/user-attachments/assets/0f72cd40-f343-4f2a-b395-2ad8be74c60e" />
 
 **Work-in-progress trading engine featuring a C++ event-driven backtester + CSV market-data ingestion, with a Python front-end for visualisation and plotting.**
 A build system will be added later.
@@ -9,7 +9,7 @@ A build system will be added later.
 <img width="350" height="150" alt="Screenshot 2026-01-07 at 11 00 34 PM" src="https://github.com/user-attachments/assets/9f97bc82-481f-4348-af3e-b2e4b725d27e" />
 
 
-*Prototype of an EMA strategy with Fixed Fractional risk management, a minimum market % change to trigger a signal is 2.5% to avoid whipsaw*
+*Prototype of an EMA strategy with Fixed Fractional risk management, a minimum market % change to trigger a signal is 0.25% to avoid whipsaw*
 
 
 <img width="350" height="150" alt="BTC" src="https://github.com/user-attachments/assets/63d2d288-8bfd-4fdf-807a-93526a93a785" />
