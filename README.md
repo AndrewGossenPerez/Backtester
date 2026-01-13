@@ -11,6 +11,8 @@ A build system will be added later.
 
 
 *Prototype of an EMA strategy with Fixed Fractional risk management, a minimum market % change to trigger a signal is 3.5% to avoid whipsaw*
+
+
 <img width="350" height="150" alt="BTC" src="https://github.com/user-attachments/assets/63d2d288-8bfd-4fdf-807a-93526a93a785" />
 
 ## Benchmarks
