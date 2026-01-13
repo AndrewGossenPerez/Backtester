@@ -23,7 +23,7 @@ A build system will be added later.
 ### CSV Ingestion
 - **Throughput:** **5M bars/s** (With Epoch given)
 
-*Dataset: ~7.6M-row Bitcoin OHLCV dataset, Coinflip strategy.*
+*Dataset: ~7.6M-row Bitcoin OHLCV dataset, Coinflip strategy ~ fills every 2nd bar, FF risk layer.*
 
 ## Features
 - [x] Modular strategy framework
