@@ -16,6 +16,7 @@ struct stopData{
     trd::Side side;
     trd::price stopPrice;
     trd::quantity qty;
+    double trailDist;
 };
 
 namespace events {

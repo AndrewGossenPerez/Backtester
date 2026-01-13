@@ -21,12 +21,12 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/BTCREC.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/aaplrecent.csv");
     Portfolio p;
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-    ExponentialMovingAverage<50,200> strat(true,0.001);
+    ExponentialMovingAverage<12,26> strat(true,0.002); // Conservative scalping of appl, nov 2022 to today 
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);
@@ -40,7 +40,7 @@ static py::list tradelogs_to_pylist(const std::vector<trd::TradeLog>& trades) {
     for (const auto& t : trades) {
         py::dict d;
         d["epoch"] = static_cast<std::int64_t>(t.epoch);
-        d["side"] = static_cast<int>(t.side);    // 0=Hold,1=Buy,2=Sell
+        d["side"] = static_cast<int>(t.side); 
         d["qty"]  = static_cast<double>(t.qty);
         d["price"] = static_cast<double>(t.price);
         d["fee"]  = static_cast<double>(t.fee);
@@ -53,7 +53,7 @@ static py::list tradelogs_to_pylist(const std::vector<trd::TradeLog>& trades) {
 static py::dict result_arrays(const trd::Result& r) {
 
     const auto& pts = r.equityPoints;
-    const auto& trds = r.trades;  // std::vector<TradeLog>
+    const auto& trds = r.trades; 
 
     const py::ssize_t n = static_cast<py::ssize_t>(pts.size());
 

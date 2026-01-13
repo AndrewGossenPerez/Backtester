@@ -40,11 +40,13 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
     bool m_thresholdEnabled;
     double m_pThresh;
 
-    RingBuffer<trd::price, NFast> m_fast;
+    RingBuffer<trd::price,NFast> m_fast;
     RingBuffer<trd::price,NSlow> m_slow;
 
     EMA m_fastEMA{0.0,false}; // Previous fast EMA 
     EMA m_slowEMA{0.0,false};
+    trd::price prevFast=0.0;
+    trd::price prevSlow=0.0;
 
     trd::Side currentSignal{trd::Side::Hold};
     double currentMarketChange{0.0};
@@ -77,14 +79,17 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
             }
 
             currentMarketChange=marketChange;
-
+            double slope = m_fastEMA.value - prevFast;
+            
             if (m_fastEMA.value>m_slowEMA.value){
                 currentSignal=trd::Side::Buy;
-            } else if (m_fastEMA.value<m_slowEMA.value){
+            } else if (slope < 0 && m_fastEMA.value < m_slowEMA.value){
                 currentSignal=trd::Side::Sell;
             } else { 
                 currentSignal=trd::Side::Hold;
             }
+
+            prevFast=m_fastEMA.value;
 
         }
 

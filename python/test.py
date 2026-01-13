@@ -1,12 +1,10 @@
-# plot_equity_pos.py
-# Fast plotting using te.run_arrays() (NumPy arrays) from your pybind module.
 
 import trading_engine as te
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter, ScalarFormatter
 
 def main():
-    
     TIME_SCALE = int(te.TIME_SCALE)
 
     print("Starting Backtest ...")
@@ -22,8 +20,8 @@ def main():
         raise RuntimeError("No data returned")
 
     # --- Settings
-    in_time = True # True: x-axis is days elapsed, False: bar index
-    nmax = 10000000 # max points to plot
+    in_time = True  # x-axis is days elapsed
+    nmax = 10_000_000  # max points to plot
     step = max(1, epoch.size // nmax)
 
     # --- Downsample
@@ -33,7 +31,7 @@ def main():
 
     # X axis
     if in_time:
-        title = "Equity & Position vs Time (days elapsed)"
+        title = "Equity & Position vs Time"
         x = (epoch_ds - epoch_ds[0]) / (86400.0 * TIME_SCALE)
         xlabel = "Days elapsed since first bar"
     else:
@@ -44,47 +42,55 @@ def main():
     # --- Plot styling
     plt.rcParams.update({
         "figure.dpi": 140,
-        "axes.titlesize": 14,
+        "axes.titlesize": 16,
         "axes.labelsize": 12,
         "xtick.labelsize": 10,
         "ytick.labelsize": 10,
+        "lines.linewidth": 1.5
     })
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5), sharex=True)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
 
-    # Equity
-    ax1.plot(x, equity_ds, linewidth=1.2)
+    # --- Equity plot
+    ax1.plot(x, equity_ds, color="#1f77b4", label="Equity")
+    ax1.fill_between(x, starting_equity, equity_ds, color="#1f77b4", alpha=0.1)
+    ax1.axhline(starting_equity, color="gray", linestyle="--", linewidth=1, label="Start Equity")
     ax1.set_title(title)
     ax1.set_ylabel("Equity ($)")
-    ax1.grid(True, which="major", alpha=0.30)
+    ax1.grid(True, which="major", alpha=0.3)
 
-    # Equity stats box (use full-res final equity)
+    # Format y-axis with commas and plain numbers
+    ax1.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f"${x:,.0f}"))
+
+    # Equity stats box
     final_equity = float(equity[-1])
     pnl = final_equity - starting_equity
     ret = (pnl / starting_equity) * 100.0
-
     ax1.text(
-        0.0, -0.1,
-        f"Starting: ${starting_equity:,.0f}\nFinal: ${final_equity:,.2f}\nPnL: ${pnl:,.2f} ({ret:.2f}%)",
+        0.02, 0.02,
+        f"Start: ${starting_equity:,.0f}\nFinal: ${final_equity:,.0f}\nPnL: ${pnl:,.0f} ({ret:.2f}%)",
         transform=ax1.transAxes,
-        va="top",
+        va="bottom",
         ha="left",
-        bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="0.8"),
+        bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.85, edgecolor="0.8"),
     )
 
-    # Position
-    ax2.plot(x, pos_ds, linewidth=1.0)
+    # --- Position plot
+    ax2.plot(x, pos_ds, color="#ff7f0e", label="Position")
     ax2.set_xlabel(xlabel)
     ax2.set_ylabel("Position")
-    ax2.grid(True, which="major", alpha=0.30)
+    ax2.grid(True, which="major", alpha=0.3)
 
-    # Nice y padding for pos
-    pmin,pmax = float(np.min(pos_ds)), float(np.max(pos_ds))
-    ppad = (pmax - pmin) * 0.05 if pmax > pmin else 1.0
+    # Format y-axis with plain numbers for positions
+    ax2.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+
+    # Slight y padding for position
+    pmin, pmax = float(np.min(pos_ds)), float(np.max(pos_ds))
     if pmax > pmin:
-        ax2.set_ylim(pmin, pmax)  # no padding
+        pad = (pmax - pmin) * 0.05
+        ax2.set_ylim(pmin - pad, pmax + pad)
     else:
-        ax2.set_ylim(pmin - 0.5, pmax + 0.5)  # tiny range if all values equal
+        ax2.set_ylim(pmin - 0.5, pmax + 0.5)
 
     plt.tight_layout()
     plt.show()

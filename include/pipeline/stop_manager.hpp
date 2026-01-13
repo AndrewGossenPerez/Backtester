@@ -6,6 +6,9 @@
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 
+// --------- CONFIG  -------------
+double trailingFactor=0.55; // 50%
+// ------------------------------
 
 template <typename DispatchT>
 class StopHandler {
@@ -18,7 +21,6 @@ class StopHandler {
     void on(const events::FillEvent& ev){
 
         //if (ev.side==trd::Side::Buy) std::cout << " BOUGHT FOR QTY: " << descaleQty(ev.qty) << " PX : " << ev.px << " EPOCH: " << ev.epoch << "\n";
-
         if (ev.stop.has_value()){
             m_stops.overwrite(std::move(ev.stop.value()));
         }
@@ -36,16 +38,25 @@ class StopHandler {
             stopData data;
             m_stops.pop(data);
 
-            if (data.side==trd::Side::Buy && current.low<=data.stopPrice){
-                // Stop price hit, sell the position associated with this stop 
 
-                //std::cout << " STOP HIT AT: " << data.stopPrice << " FOR QTY: " << data.qty << " ON EPOCH: " << data.epoch << "\n";
-                //std::cout << "SCHEDULING A SELL FOR QTY : " << descaleQty(data.qty) << " AT EPOCH: " << current.epoch << "\n";
-                
+            // Trailing stop 
+            if (data.side == trd::Side::Buy) {
+                double newStop = current.close - data.trailDist * trailingFactor;
+                if (newStop > data.stopPrice) data.stopPrice = newStop;  // Only move stop up
+            }
+
+            // Stop hit at this point 
+            if (data.side == trd::Side::Buy && current.low <= data.stopPrice) {
+
                 m_dispatcher.schedule(
-                    events::OrderEvent({data.epoch,trd::Side::Sell,data.qty})
+                    events::OrderEvent{
+                        data.epoch,
+                        trd::Side::Sell,
+                        data.qty
+                    }
                 );
-                
+
+                continue; 
             }
 
         }
@@ -57,6 +68,6 @@ class StopHandler {
     DispatchT& m_dispatcher;
     Portfolio& m_portfolio;
     trd::MarketState& m_marketState;
-    RingBuffer<stopData,25> m_stops;
+    RingBuffer<stopData,128> m_stops;
 
 };

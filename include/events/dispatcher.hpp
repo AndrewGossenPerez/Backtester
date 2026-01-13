@@ -56,6 +56,7 @@ class Dispatcher{
     {
         // Set the risk handler
         m_handlerRisk.current=FixedFractionalRisk<Dispatcher>;
+        //m_handlerRisk.current=FollowThrough;
 
     }
 

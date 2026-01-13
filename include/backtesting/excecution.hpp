@@ -32,7 +32,7 @@ inline trd::price feeFor(trd::quantity qtyScaled, trd::price px) {
     if (qtyScaled <= 0 || px <= 0) return 0; 
     auto unscaledQty=descaleQty(qtyScaled);
     auto notional = unscaledQty*px; 
-    auto fee = notional * (FEE_BPS/1000.0);
-    return fee; // Deduct a fee of (FEE_BPS/1000.0)% from the notional ( price of the trade ) 
+    auto fee = notional * (FEE_BPS/10000.0);
+    return fee; // Deduct a fee of (FEE_BPS/10000.0)% from the notional ( price of the trade ) 
 
 }

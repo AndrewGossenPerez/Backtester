@@ -13,7 +13,7 @@
 #include "events/ring_buffer.hpp"
 
 // -- CONFIG --
-constexpr int ATRBars=14; // Last 14 bars for ATR 
+constexpr int ATRBars=8; // Last 14 bars for ATR 
 // ------------
 
 template <typename DispatchT>
@@ -28,6 +28,8 @@ struct RiskData {
     Portfolio& m_portfolio;
     trd::MarketState& m_marketState;
     DispatchT& m_dispatcher;
+
+    std::optional<double> peakATR;
 
     // Function pointer to the current risk Model 
     using riskModel=void (*)(RiskData&,  const events::SignalEvent& event);

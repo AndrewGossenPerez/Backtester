@@ -1,133 +1,115 @@
 
-#pragma once 
+#pragma once
 
 #include <optional>
 #include <algorithm>
-
+#include <limits>
 #include "data/bar.hpp"
 #include "core/portfolio.hpp"
 #include "pipeline/risk_handler.hpp"
 
-// -- CONFIG -- 
-
-// PnL awareness sigmoid function
-constexpr double a = 5.5;  // Steepness
-constexpr double b = 0.35; // Midpoint of equity fraction
-
-// Core risk sizing
-double riskFactor = 0.015;       // 1.5% of equity risked per trade (slightly higher to capture early trends)
-double stopFactor = 0.02;        // Fallback stop distance (2% of price before ATR is ready)
-double volatility = 1.0;         // Multiplier for ATR (1.0 is standard)
-double slippageBuffer = 0.02;    // 2% buffer to stop distance for slippage
-double minStopPct = 0.01;        // Minimum stop distance 1% of price
-double maxPos = 0.2;             // Max 20% of equity in a single trade
-double maxStartingEquity = 0.03; // Only risk 3% of equity per trade for first ATRBars
-double tanhScale = 5.0;          // Smooth out sell pressure response
-// -------------
-
-int i=0;
+// ------- CONFIG ---------------------------------
+// Core risk parameters
+constexpr double RISK_PER_TRADE = 0.01;     // 1% equity per add
+constexpr double ATR_MULT = 2.0; // Stop distance is ATR * multiplier, thus smaller atr mult results in a faster exit 
+constexpr double MIN_STOP_PCT = 0.01;     // 1% minimum stop
+// Pyramiding 
+constexpr int MAX_ADDS = 4;   // Max number of adds per trend to limit pyramiding 
+// Exiting
+constexpr double ATR_CONTRACTION = 0.6; // 60% of peak
+constexpr double EXIT_FRAC = 0.33; // scale out 1/3
+// ------------------------------------------
 
 template <typename DispatchT>
-void FixedFractionalRisk(RiskData<DispatchT>& riskData,const events::SignalEvent& event){
-
-    double marketChange=event.marketChange.value_or(0.0);
-
-    if (event.side==trd::Side::Hold) return;
+void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event) {
+   
+    if (event.side == trd::Side::Hold) return;
 
     const auto& market = riskData.m_marketState;
     if (!market.current.epoch) return;
 
-    const trd::Bar& current = market.current;
+    const trd::Bar& bar = market.current;
 
-    const double equity = riskData.m_portfolio.equity(current.close);
+    double equity = riskData.m_portfolio.equity(bar.close);
     if (equity <= 0.0) return;
 
-    double allowableRisk = equity * riskFactor;
-    if (allowableRisk <= 0.0) return;
-
+    // stopDist calculation
     double stopDist = 0.0;
-    
-    if (riskData.barCapacity()) {
-        stopDist = volatility * riskData.calculateATR();
-        stopDist = std::max(stopDist, current.close * minStopPct);
-    }  else { 
-        stopDist = current.close * stopFactor; // Fallback
+    double atr=riskData.calculateATR();
+
+    if (riskData.barCapacity()) { // If there are enough atr bars 
+        stopDist = ATR_MULT * atr;
+    } else {
+        stopDist = bar.close * MIN_STOP_PCT;
     }
 
-    stopDist = std::max(stopDist, current.close * minStopPct);
-    double effectiveStopDist = stopDist * (1.0 + slippageBuffer); // Inclusive of slippage 
+    stopDist = std::max(stopDist, bar.close * MIN_STOP_PCT);
+    stopDist *= (1.0 + (SLIP_BPS/10000.0));
 
-    // PnL awareness 
-    double pnlFraction = riskData.m_portfolio.equity(current.close) 
-    / riskData.m_portfolio.startingBalance;
-    double pnlMultiplier = 1.0 / (1.0 + std::exp(a * (pnlFraction - b)));
-    allowableRisk *= pnlMultiplier;
+    double allowableRisk = equity * RISK_PER_TRADE; // the FixedFraction 
+    double currentQty  = descaleQty(riskData.m_portfolio.pos);
+    double currentRisk = currentQty * stopDist;
 
-    // ---- Position sizing
-    double currentPos = descaleQty(riskData.m_portfolio.pos); // existing position in asset units
-    double maxTradeValue = riskData.barCapacity() ? equity * maxPos : equity * maxStartingEquity;
-    double maxQtyByValue = maxTradeValue / (current.close * (1.0 + slippageBuffer));
-    // Compute the max new position we can take 
-    double maxNewQty = std::max(0.0, maxQtyByValue - currentPos); // Only take the qty deducted from our current pos to avoid initial blowups 
-    // Raw qty based on risk
-    double rawQty = allowableRisk / effectiveStopDist;
-    // Cap the raw qty to the maximum you are allowed to buy on top of  the current position 
-    double cappedQty = std::min(rawQty, maxNewQty);
-    if (cappedQty <= 0.0) return;
+    if (currentQty > 0) {
+        riskData.peakATR = riskData.peakATR ? std::max(*riskData.peakATR, atr) : atr;
+    }
 
-    // Scaling 
-    const trd::quantity scaledQty=cappedQty*QTY_SCALE;
-    const long double actualRisk = descaleQty(scaledQty) * effectiveStopDist;
-    if (actualRisk>allowableRisk) return;
+    if (currentQty == 0) {
+        riskData.peakATR.reset();
+    }
 
-    // Stop price
-    const double entryPrice = current.close;
-    const double stopPrice = entryPrice - stopDist;
+    // Selling
+    if (event.side == trd::Side::Sell && riskData.peakATR.has_value()) {
+        if (atr < ATR_CONTRACTION * *riskData.peakATR) {
+            double sellQty = currentQty * EXIT_FRAC;
+            if (sellQty <= 0) return;
 
-    // Don't enter a position if the stop would be immediately hit 
-    if (market.current.epoch && current.low<=stopPrice) return;
-    if (scaledQty==0) return;
+            trd::quantity scaledSell =
+                static_cast<trd::quantity>(sellQty * QTY_SCALE);
 
-    // If we're in a sell signal apply risk reduction 
-    if (event.side == trd::Side::Sell ){ // MarketChange always negative 
-
-        // Note, that the stop price will ensure that we close, however this is used to close early on downing trends 
-
-        if (riskData.m_portfolio.pos<=0) return; // No leverage, avoid expensive calculations 
-
-        double strength = std::tanh(-marketChange*tanhScale);
-        double sellReal = strength * currentPos;
-
-        trd::quantity sellQty = static_cast<trd::quantity>(sellReal * QTY_SCALE);
-
-        if (sellQty>0){
             riskData.m_dispatcher.schedule(events::OrderEvent{
-                event.epoch, trd::Side::Sell, sellQty
+                event.epoch,
+                trd::Side::Sell,
+                scaledSell
             });
+
+            return;
         }
+    } 
 
-        return;
-        
-    };
+    trd::price averagePrice=riskData.m_portfolio.avgPrice();
+    double openPnL = (bar.close - averagePrice) * currentQty;
+    if (averagePrice>0 && currentQty > 0 && openPnL < 0.0) return; // only prevent adding if losing
 
-    // At this point, we're in a buy signal 
-    std::optional<stopData> data=stopData{
+    if (currentRisk >= allowableRisk * MAX_ADDS) return;
+
+    double addRisk = allowableRisk;
+    double addQty  = addRisk / stopDist;
+
+    if (addQty <= 0.0) return;
+
+    trd::quantity scaledQty = static_cast<trd::quantity>(addQty * QTY_SCALE);
+    if (scaledQty <= 0) return;
+
+    double entryPrice = bar.close;
+    double stopPrice  = entryPrice - stopDist;
+
+    // Don't enter if stop will be hit immediately, no point 
+    if (bar.low <= stopPrice) return;
+
+    std::optional<stopData> stop=stopData{
         event.epoch,
         trd::Side::Buy,
         stopPrice,
-        scaledQty
+        scaledQty,
+        stopDist
     };
 
-    if (i<100){
-        std::cout << "Placing a BUY for QTY : " << descaleQty(scaledQty) << " Which is ~$" << descaleQty(scaledQty)*current.close << " With a current balance of : " << riskData.m_portfolio.balance << " \n";
-        std::cout << "TREND : " << marketChange;
-    }
-
     riskData.m_dispatcher.schedule(events::OrderEvent{
-        event.epoch, trd::Side::Buy, scaledQty, std::move(data)
-    } );
-
-    i++;
+        event.epoch,
+        trd::Side::Buy,
+        scaledQty,
+        std::move(stop)
+    });
 
 }
-
