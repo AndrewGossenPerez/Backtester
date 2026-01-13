@@ -1,6 +1,10 @@
+// fixed_fractional.hpp, created by Andrew Gossen.
+
+// ------
+// First prototype of a fixed fractional risk layer 
+// -----
 
 #pragma once
-
 #include <optional>
 #include <algorithm>
 #include <limits>
@@ -9,6 +13,7 @@
 #include "pipeline/risk_handler.hpp"
 
 // ------- CONFIG ---------------------------------
+
 // Core risk parameters
 constexpr double RISK_PER_TRADE = 0.01;     // 1% equity per add
 constexpr double ATR_MULT = 2.0; // Stop distance is ATR * multiplier, thus smaller atr mult results in a faster exit 
@@ -18,6 +23,7 @@ constexpr int MAX_ADDS = 4;   // Max number of adds per trend to limit pyramidin
 // Exiting
 constexpr double ATR_CONTRACTION = 0.6; // 60% of peak
 constexpr double EXIT_FRAC = 0.33; // scale out 1/3
+
 // ------------------------------------------
 
 template <typename DispatchT>
@@ -79,7 +85,7 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
 
     trd::price averagePrice=riskData.m_portfolio.avgPrice();
     double openPnL = (bar.close - averagePrice) * currentQty;
-    if (averagePrice>0 && currentQty > 0 && openPnL < 0.0) return; // only prevent adding if losing
+    if (averagePrice>0 && currentQty > 0 && openPnL < 0.0) return; // Only prevent adding if losing
 
     if (currentRisk >= allowableRisk * MAX_ADDS) return;
 

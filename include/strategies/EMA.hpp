@@ -1,5 +1,8 @@
+// EMA.hpp, created by Andrew Gossen.
 
-// Average Moving Crossover Strategy to trendfollow
+// ------
+// First prototype of an EMA strategy
+// -----
 
 #pragma once 
 #include <cstdint>
@@ -9,9 +12,6 @@
 #include "backtesting/excecution.hpp"
 #include "backtesting/strategies.hpp"
 #include "events/events.hpp"
-
-//onFill
-//onMarketData 
 
 struct EMA{
     trd::price value{0.0};
@@ -50,7 +50,6 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
 
     trd::Side currentSignal{trd::Side::Hold};
     double currentMarketChange{0.0};
-
 
     void onFill(const events::FillEvent&) override {return;};
 

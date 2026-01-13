@@ -1,7 +1,9 @@
 // created by Andrew Gossen.
 
+// -----
 // Benchmark harness for the trading engine
 // Used to measure CSV ingestion throughput and backtesting performance
+// -----
 
 #include "data/csv_reader.hpp"
 #include "backtesting/strategies.hpp"
@@ -35,7 +37,7 @@ int main() {
 
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/Bitcoin.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/aaplrecent.csv");
     auto t2CSV = clock::now();
 
     std::printf("\n -- BARS LOADED -- \n");

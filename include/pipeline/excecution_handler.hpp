@@ -1,3 +1,8 @@
+// excecution_handler.hpp, created by Andrew Gossen.
+// ------
+// Applies slippage and fees before filling an order to simulate a real market 
+// ------
+
 #pragma once
 #include "backtesting/excecution.hpp"
 #include "data/market_state.hpp"

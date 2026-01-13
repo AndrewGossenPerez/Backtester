@@ -8,7 +8,7 @@ def main():
     TIME_SCALE = int(te.TIME_SCALE)
 
     print("Starting Backtest ...")
-    starting_equity = 1_000_000
+    starting_equity = 1_000
     d = te.run_arrays(starting_equity)
     print("Back test completed, plotting...")
 
@@ -66,12 +66,13 @@ def main():
     final_equity = float(equity[-1])
     pnl = final_equity - starting_equity
     ret = (pnl / starting_equity) * 100.0
+
     ax1.text(
-        0.02, 0.02,
+        1.0, -0.05,
         f"Start: ${starting_equity:,.0f}\nFinal: ${final_equity:,.0f}\nPnL: ${pnl:,.0f} ({ret:.2f}%)",
         transform=ax1.transAxes,
         va="bottom",
-        ha="left",
+        ha="right",
         bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.85, edgecolor="0.8"),
     )
 

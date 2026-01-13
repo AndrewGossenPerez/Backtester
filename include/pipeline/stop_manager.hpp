@@ -1,5 +1,9 @@
 // stop_manager.hpp, created by Andrew Gossen
 
+// ----- 
+// Closes open positions if a stop price is hit
+// -----
+
 #pragma once
 #include <optional>
 #include "data/market_state.hpp"

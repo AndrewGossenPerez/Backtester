@@ -1,4 +1,9 @@
 // risk_handler.hpp
+
+// -----
+// Currently holds only trivial risk layers, extensive ones will be stored in include/risklayers
+// -----
+
 #pragma once
 
 #include <algorithm>

@@ -5,15 +5,17 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
-#include "data/csv_reader.hpp"
-#include <pybind11/stl.h>
-#include <iostream>
-#include "data/config.hpp"
-#include <cstdint>
-
 #include "strategies/EMA.hpp"
+#include "data/csv_reader.hpp"
+#include "data/config.hpp"
+
+#include <cstdint>
+#include <iostream>
+
 
 namespace py = pybind11;
 
@@ -28,8 +30,10 @@ static trd::Result run_backtest(int startingAmount) {
     trd::Backtest bt(p);
     ExponentialMovingAverage<12,26> strat(true,0.002); // Conservative scalping of appl, nov 2022 to today 
     //BuyAndHold strat;
+    
 
     trd::Result re=bt.run(bars,strat);
+    std::cout << re.equityPoints.back().pos;
     return re;
 
 }
