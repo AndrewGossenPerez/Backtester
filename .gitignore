@@ -19,3 +19,7 @@ __pycache__/
 samples/Bitcoin.csv
 samples/BTCREC.csv
 samples/BTCREC2.csv
+samples/tesla.csv
+samples/ETHOHLCV.csv
+samples/ETH.csv
+samples/BTCREC3.csv 
