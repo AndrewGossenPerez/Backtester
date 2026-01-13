@@ -27,7 +27,7 @@ int main() {
     Portfolio portfolio;
     portfolio.setEquity(startingEquity);
 
-    ExponentialMovingAverage<50,200> strat(true,0.0005);
+    ExponentialMovingAverage<10,50> strat(true,0.0005);
     //BuyAndHold strat;
 
     trd::Backtest bt(portfolio);

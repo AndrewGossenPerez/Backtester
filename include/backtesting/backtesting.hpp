@@ -16,6 +16,7 @@
 #include "backtesting/excecution.hpp"
 #include "backtesting/strategies.hpp"
 
+
 namespace trd{ 
 
 struct TradeLog { // Stores each completed trade 

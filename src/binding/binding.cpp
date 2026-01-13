@@ -21,12 +21,12 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/BTCREC2.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
     Portfolio p;
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-    ExponentialMovingAverage<50,200> strat(true,0.001);
+    ExponentialMovingAverage<50,200> strat(true,0.035);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);

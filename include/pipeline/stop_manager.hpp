@@ -29,7 +29,7 @@ class StopHandler {
         if (!activeStop.has_value()) return;
 
         const trd::Bar &current=m_marketState.current;
-    
+        
         if (current.low<=activeStop->stopPrice){
             // Stop price hit, sell all positions 
             m_dispatcher.schedule(

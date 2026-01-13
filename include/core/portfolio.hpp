@@ -29,9 +29,11 @@ struct Portfolio {
         balance-=cost;
         pos+=qtyScaled;
 
-        std::cout<< "BUY #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " COST: " << cost << " NEW BALANCE: " << balance << "\n";
+        if (i%1000==0) std::cout<< "BUY #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " COST: " << cost << " NEW BALANCE: " << balance << "\n";
     
     }
+
+    int b=0;
 
     void sell(trd::quantity qtyScaled, trd::price px, trd::price fee) {
 
@@ -40,7 +42,9 @@ struct Portfolio {
         balance+=gain;
         pos-=qtyScaled;
 
-        std::cout << "SELL #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " GAIN: " << gain << " NEW BALANCE: " << balance << "\n";
+        b++;
+        if (b%1000==0) std::cout << "SELL #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " GAIN: " << gain << " NEW BALANCE: " << balance << "\n";
+    
     }
 
     trd::price equity(trd::price markPx) const { // Return total portfolio value for a current market price 
@@ -51,8 +55,5 @@ struct Portfolio {
         balance = e;startingBalance=e;
      }
 
-    void unrealisedPnL(trd::price markPx){
-       
-    }
 
 };
