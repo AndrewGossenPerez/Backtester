@@ -17,6 +17,7 @@
 
 struct Signal{
     trd::Side side=trd::Side::Hold;
+    std::optional<double> marketChange=std::nullopt;
 };
 
 struct Strategy{

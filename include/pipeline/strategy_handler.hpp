@@ -10,6 +10,7 @@
 #include "data/market_state.hpp"
 #include "backtesting/strategies.hpp"
 #include "events/dispatcher.hpp"
+#include "events/events.hpp"
 
 template <typename dispatchT>
 class StrategyHandler{
@@ -26,7 +27,7 @@ class StrategyHandler{
         if (signal.side!=trd::Side::Hold){
             // Timestamp the signal so we don't trade on the same bar 
             m_dispatcher.schedule( // Push the signal event to be handled by the risk handler 
-                events::SignalEvent{event.next.epoch,signal.side}
+                events::SignalEvent{event.next.epoch,signal.side,signal.marketChange}
             );
         }
 
@@ -35,8 +36,6 @@ class StrategyHandler{
     void on(const events::FillEvent& event){ // For buy-hold 
         m_strat.onFill(event);
     }
-
-
 
     private:
 

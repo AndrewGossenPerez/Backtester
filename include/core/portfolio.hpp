@@ -25,11 +25,13 @@ struct Portfolio {
 
         auto qty=descaleQty(qtyScaled);
         auto cost = px*qty+fee;
+        if (cost>balance || qtyScaled<=0) return; // Leverage and sanity check 
+
         i++;
         balance-=cost;
         pos+=qtyScaled;
 
-        if (i%1000==0) std::cout<< "BUY #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " COST: " << cost << " NEW BALANCE: " << balance << "\n";
+       // if (i%1000==0) std::cout<< "BUY #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " COST: " << cost << " NEW BALANCE: " << balance << "\n";
     
     }
 
@@ -37,13 +39,15 @@ struct Portfolio {
 
     void sell(trd::quantity qtyScaled, trd::price px, trd::price fee) {
 
+        if (qtyScaled>pos) return; // Leverage and sanity check 
+
         auto qty=descaleQty(qtyScaled);
         auto gain = px*qty-fee;
         balance+=gain;
         pos-=qtyScaled;
 
         b++;
-        if (b%1000==0) std::cout << "SELL #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " GAIN: " << gain << " NEW BALANCE: " << balance << "\n";
+        //if (b%1000==0) std::cout << "SELL #" << i << " QTY: " << qty << " @ " << px << " FEE: " << fee << " GAIN: " << gain << " NEW BALANCE: " << balance << "\n";
     
     }
 

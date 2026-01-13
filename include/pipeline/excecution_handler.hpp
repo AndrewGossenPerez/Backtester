@@ -21,14 +21,13 @@ class ExcecutionHandler {
         const trd::price fee=feeFor(event.qty, px); 
         const trd::price cost=px*descaleQty(event.qty)+fee;
         
-        if ((event.side==trd::Side::Buy && m_portfolio.balance<cost) || event.qty==0){
+        if ((event.side==trd::Side::Buy && m_portfolio.balance<cost) || event.qty<=0){
             return;
         }
 
-
-        m_dispatcher.schedule(
-            events::FillEvent{event.epoch,event.side,event.qty,px,fee}
-        );
+        // Leverage checks  done in portfolio 
+        
+        m_dispatcher.schedule(events::FillEvent{event.epoch,event.side,event.qty,px,fee,event.stop });
 
     }
     

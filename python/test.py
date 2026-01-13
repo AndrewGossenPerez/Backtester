@@ -10,7 +10,7 @@ def main():
     TIME_SCALE = int(te.TIME_SCALE)
 
     print("Starting Backtest ...")
-    starting_equity = 100_000
+    starting_equity = 1_000_000
     d = te.run_arrays(starting_equity)
     print("Back test completed, plotting...")
 

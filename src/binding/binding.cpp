@@ -21,12 +21,12 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/BTCREC.csv");
     Portfolio p;
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-    ExponentialMovingAverage<50,200> strat(true,0.035);
+    ExponentialMovingAverage<50,200> strat(true,0.001);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);
@@ -40,10 +40,10 @@ static py::list tradelogs_to_pylist(const std::vector<trd::TradeLog>& trades) {
     for (const auto& t : trades) {
         py::dict d;
         d["epoch"] = static_cast<std::int64_t>(t.epoch);
-        d["side"]  = static_cast<int>(t.side);    // 0=Hold,1=Buy,2=Sell
-        d["qty"]   = static_cast<double>(t.qty);
+        d["side"] = static_cast<int>(t.side);    // 0=Hold,1=Buy,2=Sell
+        d["qty"]  = static_cast<double>(t.qty);
         d["price"] = static_cast<double>(t.price);
-        d["fee"]   = static_cast<double>(t.fee);
+        d["fee"]  = static_cast<double>(t.fee);
         py_trades.append(d);
     }
 

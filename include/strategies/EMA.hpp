@@ -31,7 +31,8 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
     } 
 
     Signal onBar(const trd::Bar&) override {
-        return {currentSignal};
+        //if (currentSignal==trd::Side::Sell) std::cout << "| - Requesting a SELL for a market change : " << currentMarketChange*100.0<<"% \n";
+        return {currentSignal,currentMarketChange};
     }
     
     private:
@@ -46,6 +47,7 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
     EMA m_slowEMA{0.0,false};
 
     trd::Side currentSignal{trd::Side::Hold};
+    double currentMarketChange{0.0};
 
 
     void onFill(const events::FillEvent&) override {return;};
@@ -74,12 +76,12 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
                 return; // Filter out noise 
             }
 
+            currentMarketChange=marketChange;
+
             if (m_fastEMA.value>m_slowEMA.value){
                 currentSignal=trd::Side::Buy;
-                //std::cout << "| - Requesting a BUY for a market change : " << marketChange*100.0<<"% \n";
             } else if (m_fastEMA.value<m_slowEMA.value){
                 currentSignal=trd::Side::Sell;
-                //std::cout << "| - Requesting a SELL for a market change : " << marketChange*100.0<<"% \n";
             } else { 
                 currentSignal=trd::Side::Hold;
             }

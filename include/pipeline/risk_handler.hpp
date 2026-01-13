@@ -10,16 +10,20 @@
 #include "data/config.hpp" // for QTY_SCALE
 #include "data/market_state.hpp"
 #include "backtesting/excecution.hpp"
+#include "events/ring_buffer.hpp"
+
+// -- CONFIG --
+constexpr int ATRBars=14; // Last 14 bars for ATR 
+// ------------
 
 template <typename DispatchT>
 struct RiskData {
 
-    // The backtest creates one of this struct, which is passed onto each 
+    // The backtest creates one of this struct used for Risk metadata, which is passed onto each 
     // risk model function 
     
     RiskData(Portfolio& portfolio, trd::MarketState& marketState,DispatchT& dispatcher)
     : m_portfolio(portfolio), m_marketState(marketState), m_dispatcher(dispatcher) {}
-
 
     Portfolio& m_portfolio;
     trd::MarketState& m_marketState;
@@ -28,6 +32,43 @@ struct RiskData {
     // Function pointer to the current risk Model 
     using riskModel=void (*)(RiskData&,  const events::SignalEvent& event);
     riskModel current=nullptr;
+
+    double calculateATR(){
+
+        if (barHistory.size() < 2) return 0.0; // Need at least 2 bars
+
+        double sumTR = 0.0;
+        size_t count = barHistory.size() - 1;
+
+        for (size_t i = 1; i < barHistory.size(); ++i) {
+
+            const trd::Bar& curr = barHistory[i];
+            const trd::Bar& prev = barHistory[i - 1];
+
+            double highLow = curr.high - curr.low;
+            double highClosePrev = std::abs(curr.high - prev.close);
+            double lowClosePrev = std::abs(curr.low - prev.close);
+
+            double trueRange = std::max({highLow, highClosePrev, lowClosePrev});
+            sumTR += trueRange;
+
+        }
+
+        return sumTR / static_cast<double>(count);
+
+    }
+
+    void on(const events::MarketEvent& ev){
+        trd::Bar current=ev.bar;
+        barHistory.overwrite(current);
+    }
+
+    bool barCapacity () const { return barHistory.full(); }
+
+    private: // Store bar history for ATR calculations 
+
+    RingBuffer<trd::Bar,ATRBars> barHistory;
+
 
 };
 
