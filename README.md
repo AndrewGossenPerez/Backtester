@@ -29,4 +29,5 @@ A build system will be added later.
 - [x] Python interface (WIP)
 - [x] Fixed Fractional Risk Handler with a stopping system
 - [x] EMA (Simple first prototype)
+- [ ] Fixed Fractional, less front exposure
 - [ ] Optimisation
