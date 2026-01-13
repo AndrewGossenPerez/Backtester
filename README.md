@@ -5,6 +5,11 @@ A build system will be added later.
 
 ---
 
+* Current EMA + FF implementation on aapl market data 1 Nov 2022 to 14 Jan 2026. 
+
+
+  <img width="346" height="611" alt="EMA+FF" src="https://github.com/user-attachments/assets/0f6b8430-dfa4-4ad3-b486-21f47475b6ec" />
+
 
 ## Benchmarks
 
