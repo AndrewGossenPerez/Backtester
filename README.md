@@ -8,7 +8,7 @@ A build system will be added later.
 
 ## Benchmarks
 
-### Backtesting Engine (100 runs EMA FF risk)
+### Backtesting Engine (100 runs Coinflip strat FF risk)
 - **Median throughput:** **2.66M bars/s**  
 - **P90 throughput:** **2.48M bars/s**  
 
