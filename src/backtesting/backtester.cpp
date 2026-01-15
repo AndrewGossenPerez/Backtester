@@ -22,65 +22,114 @@
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 #include "data/market_state.hpp"
-//#include "alpaca/alpaca.h"
-//#include "MyAlpaca/alpaca_handler.h" // My include
+#include "API/helper.hpp"
+
+#include <chrono>
+#include <thread>
+#include <iostream>
+#include <vector>
+
+// -- CONFIG --
+int waitTime=60; // Waits this amount of time before trying to fetch a new bar again
+// -----------
 
 
-trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strategy){
-
-    // Event-driven backtester 
-    // For each bar creates a marketEvent
-    // This marketEvent is handled by the strategy handler which produces it's own event to be handled by yet another handler
-    // This process repeats/propagates through the pipeline, eventually reaching the FillEvent if a trade has been excecuted 
-
-
-    //alpacaHandler alpaca;
-    //auto resp = alpaca.client().getOrders();
-
+trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, bool live) {
 
     MarketState marketState;
     trd::Result result;
 
-    if (bars.size()<2) { // Not enough bars to do a simulation, in reality no one should be using this engine on so little bars anyway 
-        result.finalEquity= bars.empty() ? 0.0 : m_portfolio.equity(bars.back().close);
-        return result;
-    }
+    events::Dispatcher<2048> dispatcher(strategy, marketState, m_portfolio, result);
 
-    events::Dispatcher<2048> dispatcher(
-        strategy,marketState,m_portfolio,result
-    );
-
-    // Reserve the stored trades and equity points to their maximum possible value to avoid reallocations
-    dispatcher.getReportHandler().getTrades().reserve(bars.size());
-    dispatcher.getReportHandler().getEquityPoints().reserve(bars.size());
-
-    // Main loop 
-    for (std::size_t i=0; i+1 < bars.size();++i){
-
-        //if (i==10000) break;
-        if (m_portfolio.balance<=0.0) break;
-
-        // Only prev and current and used for strategies and risk handling to avoid
-        // look-ahead bias 
+    if (!live) {
         
-        if (i>0) { marketState.prev=bars[i-1]; marketState.hasPrev=true;}
-        marketState.current=bars[i];
-        marketState.next=bars[i+1]; // Can be used during excecution as this is when an order is already 
+        dispatcher.getReportHandler().getTrades().reserve(bars.size());
+        dispatcher.getReportHandler().getEquityPoints().reserve(bars.size());
 
-        // Create marketEvent which will propogate new events through the pipeline
-        dispatcher.schedule(events::MarketEvent{marketState.current,marketState.next});
-        dispatcher.run();
+        std::cout << " NON LIVE BACKTESTING COMMENCED \n ";
 
+        // Historical backtest
+        for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
+            if (m_portfolio.balance <= 0.0) break;
+
+            if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
+            marketState.current = bars[i];
+            marketState.next = bars[i + 1];
+
+            dispatcher.schedule(events::MarketEvent{ marketState.current, marketState.next});
+            dispatcher.run();
+        }
+
+        result.finalEquity = m_portfolio.equity(bars.back().close);
+        
     }
 
-    { // Format result 
+    else {
 
-    result.finalEquity=m_portfolio.equity(bars.back().close);
+        dispatcher.getReportHandler().getTrades().reserve(5000);
+        dispatcher.getReportHandler().getEquityPoints().reserve(5000);
 
-    result.equityPoints=dispatcher.getReportHandler().getEquityPoints();
-    result.trades=dispatcher.getReportHandler().getTrades();
+        std::cout << " LIVE TRADING COMMENCED \n ";
+        // Live mode using trd::timestamp
+        trd::timestamp lastEpoch = 0;
 
+        std::cout << " Process initial chunk, bars : " << bars.size() << "\n";
+        // Process initial chunk
+
+        for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
+            
+            if (m_portfolio.balance <= 0.0) break;
+            if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
+            marketState.current = bars[i];
+            marketState.next = bars[i + 1];
+            dispatcher.schedule(events::MarketEvent{ marketState.current, marketState.next });
+            dispatcher.run();
+
+        }
+
+
+        while (m_portfolio.balance > 0.0) {
+
+            std::cout << "\n Fetchin bar \n";
+
+            std::vector<trd::Bar> newBars;
+            addBar(newBars, 2);  // fetch last 2 bars 
+
+            if (newBars.empty()) {
+                std::this_thread::sleep_for(std::chrono::seconds(waitTime));
+                continue;
+            }
+
+            trd::timestamp latestEpoch = newBars.back().epoch;
+            if (latestEpoch == lastEpoch) {
+                std::this_thread::sleep_for(std::chrono::seconds(waitTime));
+                continue;
+            }
+
+            lastEpoch = latestEpoch;
+            if (!bars.empty() && bars.back().epoch == newBars[0].epoch) {
+                bars.push_back(newBars[1]);
+            } else {
+                bars.insert(bars.end(), newBars.begin(), newBars.end());
+            }
+
+            size_t i = bars.size() - 2;  // second-last bar is current
+            if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
+            marketState.current = bars[i];
+            marketState.next = bars[i + 1];
+            dispatcher.schedule(events::MarketEvent{ marketState.current, marketState.next });
+            dispatcher.run();
+
+            std::cout << "Processed new live bar (epoch): " << marketState.current.epoch << std::endl;
+            std::cout << "New bar size : " << bars.size() << "\n";
+
+        }
+
+        result.finalEquity = m_portfolio.equity(bars.back().close);
     }
+
+    result.equityPoints = dispatcher.getReportHandler().getEquityPoints();
+    result.trades = dispatcher.getReportHandler().getTrades();
 
     return result;
 

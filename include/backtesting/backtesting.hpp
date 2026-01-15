@@ -70,7 +70,7 @@ class Backtest{
 
     Backtest(Portfolio& portfolio) : m_portfolio(portfolio) {}
 
-    Result run(const std::vector<trd::Bar>& bars,Strategy& strategy);
+    Result run(std::vector<trd::Bar>& bars,Strategy& strategy,bool live);
 
     private: 
 

@@ -4,11 +4,12 @@
 // Notes:
 // For buy/sell, the quantity is assumed to be already scaled to QTY_SCALE
 // ---- 
-
 #pragma once
 #include "core/types.hpp"
 #include "data/config.hpp"
 #include "utility/scaler.hpp"
+#include "API/helper.hpp"
+
 #include <algorithm>
 #include <cstdint>
 #include <optional>
@@ -19,17 +20,100 @@ struct Track{
     trd::quantity qty;
 };
 
-struct Portfolio {
+class Portfolio {
 
-    Portfolio(){
-        m_tracks.reserve(1000);
+    public:
+
+    trd::price balance{0.0};
+    trd::quantity pos{0};
+    trd::price lastPrice{0.0};
+
+    trd::price equity(trd::price markPx = 0.0) const  {
+        return balance + (descaleQty(pos) * (long double)markPx);
     }
 
-    trd::price balance{100000.0}; 
-    trd::price startingBalance{0.0}; // Used for pnL 
-    trd::quantity pos{0}; 
-    std::optional<trd::price> lastAddPrice;
+    virtual trd::price avgPrice() const = 0;
 
+    virtual void buy(trd::quantity qty, trd::price px = 0.0, trd::price fee = 0.0) = 0;
+    virtual void sell(trd::quantity qty, trd::price px = 0.0, trd::price fee = 0.0) = 0;
+    virtual void syncLive() {}   // only needed for live portfolios
+
+};
+
+class LivePortfolio : public Portfolio { 
+
+    public:
+
+    ~LivePortfolio()=default;
+
+    std::string symbol{"AAPL"};  // default symbol
+
+    LivePortfolio(const std::string& sym = "AAPL") : symbol(sym) {
+        syncLive();
+    }
+
+    // Fetch latest account & position info from Alpaca
+    void syncLive() override {
+        try {
+            auto account = getAccount(); // Alpaca API
+            balance = std::stod(account["cash"].get<std::string>());
+
+            try {
+
+                auto position = httpGet("https://paper-api.alpaca.markets/v2/positions/" + symbol);
+                // Alpaca returns numeric values as strings in JSON
+                pos = static_cast<trd::quantity>( std::stod(position["qty"].get<std::string>()) * QTY_SCALE);
+
+            } catch (...) {
+                // no position, assume 0
+                pos = 0;
+            }
+
+        } catch (std::exception& e) {
+            std::cerr << "[LivePortfolio] Error syncing live portfolio: " << e.what() << std::endl;
+        } 
+    }
+
+    trd::price avgPrice() const override { return pos; }
+
+    void buy(trd::quantity qtyScaled, trd::price px = 0.0, trd::price fee = 0.0) override {
+
+        std::cout << "Buying now for qty : " << descaleQty(qtyScaled) << " At price @ " << px*descaleQty(qtyScaled)+fee << "!\n";
+
+        (void) fee;
+        (void) px;
+
+        try {
+            nlohmann::json response=placeOrder(symbol, descaleQty(qtyScaled), "buy"); // Alpaca market order
+            std::cout << " Response :" << response["status"] << "\n";
+            syncLive(); // update local state
+        } catch (std::exception& e) {
+            std::cerr << "[LivePortfolio] Live buy failed: " << e.what() << std::endl;
+        }
+    }
+
+    void sell(trd::quantity qtyScaled, trd::price px = 0.0, trd::price fee = 0.0) override {
+
+        std::cout << "Selling now for qty : " << descaleQty(qtyScaled) << " At price @ " << px*descaleQty(qtyScaled)+fee << "!\n";
+
+        (void) fee;
+        (void) px;
+
+        try {
+            placeOrder(symbol, descaleQty(qtyScaled), "sell"); // Alpaca market order
+            syncLive(); // update local state
+        } catch (std::exception& e) {
+            std::cerr << "[LivePortfolio] Live sell failed: " << e.what() << std::endl;
+        }
+    }
+
+};
+
+class BacktestPortfolio : public Portfolio {
+
+    public:
+
+    BacktestPortfolio(){ m_tracks.reserve(1000); }
 
     // Member functions 
     void buy(trd::quantity qtyScaled, trd::price px, trd::price fee) {
@@ -81,7 +165,6 @@ struct Portfolio {
 
     trd::price avgPrice() const {
 
-
         if (m_tracks.empty()) return 0.0;
 
         double weighted = 0.0;
@@ -98,16 +181,12 @@ struct Portfolio {
     }
 
 
-    trd::price equity(trd::price markPx) const { // Return total portfolio value for a current market price 
-        return balance + (descaleQty(pos) * (long double)markPx);
-    }
-
-    void setEquity(trd::price e) { 
-        balance = e;startingBalance=e;
+    void setBalance(trd::price e) { 
+        balance = e;
     }
 
     private:
-
     std::vector<Track> m_tracks;
 
 };
+

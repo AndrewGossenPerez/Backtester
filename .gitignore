@@ -23,3 +23,6 @@ samples/tesla.csv
 samples/ETHOHLCV.csv
 samples/ETH.csv
 samples/BTCREC3.csv 
+
+# Not for you 
+include/API/keys.hpp

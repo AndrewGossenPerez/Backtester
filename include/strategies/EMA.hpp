@@ -60,10 +60,14 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
         m_fast.push(m.bar.close);
         m_slow.push(m.bar.close);
 
-        if (m_fast.size() == NFast) 
-        computeEMA(m.bar.close, m_fast, true);
-        if (m_slow.size() == NSlow)
-        computeEMA(m.bar.close, m_slow, false);
+        if (m_fast.size() == NFast) {
+            computeEMA(m.bar.close, m_fast, true);
+        } else return;
+
+        if (m_slow.size() == NSlow) {
+            computeEMA(m.bar.close, m_slow, false);
+        } else return;
+        // Only apply EMA when the lookback windows are filled 
 
         // Check for crossover 
         if (m_fastEMA.initialised && m_slowEMA.initialised){
