@@ -101,7 +101,7 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
 
     if (bar.low <= stopPrice) return;  // Don't enter if stop will be hit immediately, prevents stupid fills 
 
-    std::cout << "Booking order for qty: " << descaleQty(scaledQty) << " @ " << descaleQty(scaledQty)*bar.close << "\n";
+    //std::cout << "Booking order for qty: " << descaleQty(scaledQty) << " @ " << descaleQty(scaledQty)*bar.close << "\n";
 
     std::optional<stopData> stop=stopData{
         event.epoch,

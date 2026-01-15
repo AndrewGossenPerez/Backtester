@@ -23,7 +23,7 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/aaplrecent.csv");
     Portfolio p;
     p.setEquity(startingEquity);
    
@@ -32,7 +32,6 @@ static trd::Result run_backtest(int startingAmount) {
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat);
-    std::cout << re.equityPoints.back().pos;
     return re;
 
 }
@@ -62,7 +61,7 @@ static py::dict result_arrays(const trd::Result& r) {
 
     auto epoch = py::array_t<std::int64_t>(n);
     auto equity = py::array_t<double>(n);
-    auto pos = py::array_t<std::int64_t>(n);
+    auto pos = py::array_t<double>(n);
 
     auto e = epoch.mutable_unchecked<1>();
     auto q = equity.mutable_unchecked<1>();
@@ -71,7 +70,7 @@ static py::dict result_arrays(const trd::Result& r) {
     for (py::ssize_t i = 0; i < n; ++i) {
         e(i) = static_cast<std::int64_t>(pts[i].epoch);
         q(i) = static_cast<double>(pts[i].equity);
-        p(i) = static_cast<std::int64_t>(pts[i].pos);
+        p(i) = static_cast<double>(pts[i].pos);
     }
 
     py::dict d;

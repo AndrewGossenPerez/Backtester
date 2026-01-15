@@ -22,11 +22,11 @@ struct TradeLog { // Stores each completed trade
 
     trd::timestamp epoch;  
     trd::Side side;     
-    trd::quantity qty;    
+    long double qty;    
     trd::price price;      
     trd::price fee;     
 
-    TradeLog(trd::timestamp e,trd::Side s,trd::quantity q,trd::price p,trd::price f)
+    TradeLog(trd::timestamp e,trd::Side s,long double q,trd::price p,trd::price f)
     : epoch(e), side(s), qty(q), price(p), fee(f) {}
     
 };
@@ -35,9 +35,8 @@ struct EquityPoint { // Used to graph equity as a function of time
 
     trd::timestamp epoch;
     trd::price equity;
-    trd::quantity pos;
-
-    EquityPoint(trd::timestamp e,trd::price eq,trd::quantity qty) : epoch(e), equity(eq), pos(qty) {} 
+    long double pos;
+    EquityPoint(trd::timestamp e,trd::price eq,long double qty) : epoch(e), equity(eq), pos(qty) {} 
 
 };
 

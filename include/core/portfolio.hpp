@@ -34,7 +34,7 @@ struct Portfolio {
     // Member functions 
     void buy(trd::quantity qtyScaled, trd::price px, trd::price fee) {
 
-        std::cout << "Filling now for qty : " << descaleQty(qtyScaled) << " At price @ " << px*descaleQty(qtyScaled)+fee << "!\n";
+        //std::cout << "Filling now for qty : " << descaleQty(qtyScaled) << " At price @ " << px*descaleQty(qtyScaled)+fee << "!\n";
 
         auto qty=descaleQty(qtyScaled);
         auto cost = px*qty+fee;
@@ -45,7 +45,7 @@ struct Portfolio {
 
         m_tracks.push_back(Track{px, qtyScaled});
 
-        std::cout << " Fill complete \n";
+        //std::cout << " Fill complete \n";
 
     }
 

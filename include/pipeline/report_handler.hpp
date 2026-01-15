@@ -29,7 +29,7 @@ class ReportHandler{
         m_trades.emplace_back( 
             event.epoch,
             event.side,
-            event.qty,
+            descaleQty(event.qty),
             event.px,
             event.fee
         );
