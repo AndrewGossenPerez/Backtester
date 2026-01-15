@@ -19,7 +19,7 @@
 #include <vector>
 
 
-int benchMark() {
+void benchMark() {
 
     using clock = std::chrono::steady_clock;
 
@@ -75,19 +75,19 @@ int benchMark() {
         fills.push_back(double(re.trades.size()));
     }
 
-    std::vector<double> secs_sorted = secs;
-    std::sort(secs_sorted.begin(), secs_sorted.end());
+    std::vector<double> secsSorted = secs;
+    std::sort(secsSorted.begin(), secsSorted.end());
 
     // Median, p90, max and min backtest elapsed time 
-    auto median= secs_sorted[secs_sorted.size() / 2];
-    auto p90 = secs_sorted[(secs_sorted.size() * 90) / 100];
-    auto minT = secs_sorted.front();
-    auto maxT = secs_sorted.back();
+    auto median= secsSorted[secsSorted.size() / 2];
+    auto p90 = secsSorted[(secsSorted.size() * 90) / 100];
+    auto minT = secsSorted.front();
+    auto maxT = secsSorted.back();
 
     // Median amount of fills excecued
-    std::vector<double> fills_sorted = fills;
-    std::sort(fills_sorted.begin(), fills_sorted.end());
-    double medianFills = fills_sorted[fills_sorted.size() / 2];
+    std::vector<double> fillsSorted = fills;
+    std::sort(fillsSorted.begin(), fillsSorted.end());
+    double medianFills = fillsSorted[fillsSorted.size() / 2];
 
     // Throughput calculation from median time
     double barsPerSecMedian = barsProcessed / median;
@@ -111,6 +111,8 @@ int benchMark() {
     std::cout << "\n--- BENCHMARKS CSV INGESTION ---\n";
     std::printf("[bars/sec]: %.0f\n", (mainBars.size() / secondsCSV));
     std::printf("[elapsed]: %.9f s\n", secondsCSV);
+
+    return;
 
 }
 

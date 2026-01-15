@@ -30,11 +30,14 @@
 #include <vector>
 
 // -- CONFIG --
-int waitTime=60; // Waits this amount of time before trying to fetch a new bar again
+int waitTime=65; // Waits this amount of time before trying to fetch a new bar again
 // -----------
 
 
 trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, bool live) {
+    
+    std::vector<trd::Bar> newBars;
+    newBars.reserve(2);
 
     MarketState marketState;
     trd::Result result;
@@ -70,7 +73,6 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
         dispatcher.getReportHandler().getEquityPoints().reserve(5000);
 
         std::cout << " LIVE TRADING COMMENCED \n ";
-        // Live mode using trd::timestamp
         trd::timestamp lastEpoch = 0;
 
         std::cout << " Process initial chunk, bars : " << bars.size() << "\n";
@@ -90,10 +92,13 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
 
         while (m_portfolio.balance > 0.0) {
 
-            std::cout << "\n Fetchin bar \n";
+            std::cout << "\n Fetching latest two bars... \n";
 
-            std::vector<trd::Bar> newBars;
-            addBar(newBars, 2);  // fetch last 2 bars 
+            addBar(newBars, 2); 
+
+            std::cout << "Current Bar LE: " << bars.back().epoch << "\n";
+            std::cout << "Bar epochs: " << newBars[0].epoch << " | " << newBars[1].epoch << "\n";
+
 
             if (newBars.empty()) {
                 std::this_thread::sleep_for(std::chrono::seconds(waitTime));
@@ -122,6 +127,8 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
 
             std::cout << "Processed new live bar (epoch): " << marketState.current.epoch << std::endl;
             std::cout << "New bar size : " << bars.size() << "\n";
+
+            newBars.clear();
 
         }
 
