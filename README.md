@@ -30,4 +30,5 @@ A build system will be added later.
 - [x] Fixed Fractional Risk Handler with a stopping system
 - [x] EMA (Simple first prototype)
 - [ ] Fixed Fractional, less front exposure
+- [ ] Orderbooking ( Start of a truly low-latency system ) 
 - [ ] Optimisation
