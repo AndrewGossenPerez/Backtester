@@ -23,7 +23,7 @@ int main() {
 
     std::printf("--- BACK TEST BENCHMARK STARTING :) ---\n");
 
-    trd::price startingEquity{100'000};
+    trd::price startingEquity{1'000};
     trd::csvReader reader;
 
     Portfolio portfolio;
@@ -37,7 +37,7 @@ int main() {
 
     // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/aaplrecent.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/BTCREC3.csv");
     auto t2CSV = clock::now();
 
     std::printf("\n -- BARS LOADED -- \n");

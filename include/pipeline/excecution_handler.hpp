@@ -25,6 +25,8 @@ class ExcecutionHandler {
         const trd::price px=slip(m_marketState.next.open, event.side); // Calculate price after slippage 
         const trd::price fee=feeFor(event.qty, px); 
         const trd::price cost=px*descaleQty(event.qty)+fee;
+
+        std::cout << "Excecution handler request for qty :"<< event.qty << " Real @ " << descaleQty(event.qty)*cost << "\n";
         
         if ((event.side==trd::Side::Buy && m_portfolio.balance<cost) || event.qty<=0){
             return;

@@ -16,13 +16,15 @@
 
 // Core risk parameters
 constexpr double RISK_PER_TRADE = 0.01;     // 1% equity per add
-constexpr double ATR_MULT = 2.0; // Stop distance is ATR * multiplier, thus smaller atr mult results in a faster exit 
+constexpr double ATR_MULT = 1.95; // Stop distance is ATR * multiplier, thus smaller atr mult results in a faster exit 
 constexpr double MIN_STOP_PCT = 0.01;     // 1% minimum stop
+constexpr bool ALLOW_ON_LOSS=false;
 // Pyramiding 
 constexpr int MAX_ADDS = 4;   // Max number of adds per trend to limit pyramiding 
 // Exiting
-constexpr double ATR_CONTRACTION = 0.6; // 60% of peak
-constexpr double EXIT_FRAC = 0.33; // scale out 1/3
+constexpr double ATR_CONTRACTION = 0.6 ; // 60% of peak
+constexpr double EXIT_FRAC = 0.3; // When selling, what % of the normal buy qty to sell by
+
 
 // ------------------------------------------
 
@@ -54,13 +56,10 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
 
     double allowableRisk = equity * RISK_PER_TRADE; // the FixedFraction 
     double currentQty  = descaleQty(riskData.m_portfolio.pos);
-    double currentRisk = currentQty * stopDist;
 
     if (currentQty > 0) {
         riskData.peakATR = riskData.peakATR ? std::max(*riskData.peakATR, atr) : atr;
-    }
-
-    if (currentQty == 0) {
+    } else {
         riskData.peakATR.reset();
     }
 
@@ -85,9 +84,9 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
 
     trd::price averagePrice=riskData.m_portfolio.avgPrice();
     double openPnL = (bar.close - averagePrice) * currentQty;
-    if (averagePrice>0 && currentQty > 0 && openPnL < 0.0) return; // Only prevent adding if losing
-
-    if (currentRisk >= allowableRisk * MAX_ADDS) return;
+    if ( (averagePrice>0 && currentQty > 0 && openPnL < 0.0) || ALLOW_ON_LOSS) return; // Only prevent adding if losing
+    double maxThisRisk = allowableRisk * MAX_ADDS;
+    if (riskData.totalOpenRisk + allowableRisk >= maxThisRisk) return; // Safeguard, prevent this fill from going over the risk budget 
 
     double addRisk = allowableRisk;
     double addQty  = addRisk / stopDist;
@@ -100,8 +99,9 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
     double entryPrice = bar.close;
     double stopPrice  = entryPrice - stopDist;
 
-    // Don't enter if stop will be hit immediately, no point 
-    if (bar.low <= stopPrice) return;
+    if (bar.low <= stopPrice) return;  // Don't enter if stop will be hit immediately, prevents stupid fills 
+
+    std::cout << "Booking order for qty: " << descaleQty(scaledQty) << " @ " << descaleQty(scaledQty)*bar.close << "\n";
 
     std::optional<stopData> stop=stopData{
         event.epoch,

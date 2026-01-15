@@ -22,6 +22,9 @@
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 #include "data/market_state.hpp"
+//#include "alpaca/alpaca.h"
+//#include "MyAlpaca/alpaca_handler.h" // My include
+
 
 trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strategy){
 
@@ -29,6 +32,11 @@ trd::Result trd::Backtest::run(const std::vector<trd::Bar>& bars,Strategy& strat
     // For each bar creates a marketEvent
     // This marketEvent is handled by the strategy handler which produces it's own event to be handled by yet another handler
     // This process repeats/propagates through the pipeline, eventually reaching the FillEvent if a trade has been excecuted 
+
+
+    //alpacaHandler alpaca;
+    //auto resp = alpaca.client().getOrders();
+
 
     MarketState marketState;
     trd::Result result;

@@ -21,8 +21,14 @@
 constexpr int ATRBars=8; // Last 14 bars for ATR 
 // ------------
 
+struct RiskMetaData{ // Stores the risk for each attempted entry ( Orderbook ) 
+    trd::price risk;
+    trd::timestamp epoch;
+    trd::Side side;
+};
+
 template <typename DispatchT>
-struct RiskData {
+struct RiskData { 
 
     // The backtest creates one of this struct used for Risk metadata, which is passed onto each 
     // risk model function 
@@ -70,13 +76,25 @@ struct RiskData {
         barHistory.overwrite(current);
     }
 
+    void on(const events::FillEvent& ev){ 
+
+        int neg=1;
+        if (ev.side==trd::Side::Sell) neg=-1;
+
+        for (std::size_t i=0;i<riskHistory.size();i++){
+            if (riskHistory[i].epoch==ev.epoch && ev.stop.has_value()) {
+                totalOpenRisk+=neg*descaleQty(ev.qty)*ev.stop.value().trailDist;
+            }
+        }
+
+    }
+
     bool barCapacity () const { return barHistory.full(); }
 
-    private: // Store bar history for ATR calculations 
-
     RingBuffer<trd::Bar,ATRBars> barHistory;
-
-
+    RingBuffer<trd::Bar,5> riskHistory; // Stores last 5 attempted orders, to check if they filled to add to total open 
+    trd::price totalOpenRisk=0;
+    
 };
 
 // Risk Functions 

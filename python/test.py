@@ -12,9 +12,9 @@ def main():
     d = te.run_arrays(starting_equity)
     print("Back test completed, plotting...")
 
-    epoch = np.asarray(d["epoch"], dtype=np.int64)
+    epoch = np.asarray(d["epoch"], dtype=np.float64)
     equity = np.asarray(d["equity"], dtype=np.float64)
-    pos = np.asarray(d["pos"], dtype=np.int64) 
+    pos = np.asarray(d["pos"], dtype=np.float64) 
 
     if epoch.size == 0:
         raise RuntimeError("No data returned")
@@ -83,15 +83,7 @@ def main():
     ax2.grid(True, which="major", alpha=0.3)
 
     # Format y-axis with plain numbers for positions
-    ax2.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
-
-    # Slight y padding for position
-    pmin, pmax = float(np.min(pos_ds)), float(np.max(pos_ds))
-    if pmax > pmin:
-        pad = (pmax - pmin) * 0.05
-        ax2.set_ylim(pmin - pad, pmax + pad)
-    else:
-        ax2.set_ylim(pmin - 0.5, pmax + 0.5)
+    ax2.yaxis.set_major_formatter(ScalarFormatter(useOffset=True))
 
     plt.tight_layout()
     plt.show()

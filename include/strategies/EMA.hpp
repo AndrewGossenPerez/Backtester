@@ -13,6 +13,7 @@
 #include "backtesting/strategies.hpp"
 #include "events/events.hpp"
 
+
 struct EMA{
     trd::price value{0.0};
     bool initialised{false};
@@ -56,10 +57,7 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
     void onMarketData(const events::MarketEvent& m) override {
 
         // Update prices 
-        if (!m_fastEMA.initialised)
         m_fast.push(m.bar.close);
-
-        if (!m_slowEMA.initialised)
         m_slow.push(m.bar.close);
 
         if (m_fast.size() == NFast) 
@@ -74,7 +72,7 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
 
             if (m_thresholdEnabled && std::abs(marketChange)<m_pThresh){
                 currentSignal=trd::Side::Hold;
-                return; // Filter out noise 
+                return; // Filter out noise and range-based market 
             }
 
             currentMarketChange=marketChange;
@@ -95,7 +93,7 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
     }
 
     template<std::size_t M>
-    void computeEMA(trd::price pt,RingBuffer<trd::price,M>& m_prices,bool isFast=true){
+    void computeEMA(trd::price pt,RingBuffer<trd::price,M>& m_prices,bool isFast=true){ // Later add summing as an optimisation to avoid calling this every time 
 
         trd::price alpha=(2.0/(M+1));
 

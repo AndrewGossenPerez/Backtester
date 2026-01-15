@@ -23,14 +23,13 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aaplrecent.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/aapl.csv");
     Portfolio p;
     p.setEquity(startingEquity);
    
     trd::Backtest bt(p);
-    ExponentialMovingAverage<12,26> strat(true,0.002); // Conservative scalping of appl, nov 2022 to today 
+    ExponentialMovingAverage<12,28> strat(false); 
     //BuyAndHold strat;
-    
 
     trd::Result re=bt.run(bars,strat);
     std::cout << re.equityPoints.back().pos;
