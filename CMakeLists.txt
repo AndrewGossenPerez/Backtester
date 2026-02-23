@@ -33,4 +33,6 @@ pybind11_add_module(trading_engine
     src/binding/binding.cpp
 )
 
+# Standalone exe
+add_executable(trading_main src/main.cpp)
 target_link_libraries(trading_engine PRIVATE engine_core)
