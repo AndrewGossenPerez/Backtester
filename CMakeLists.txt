@@ -16,6 +16,7 @@ add_library(engine_core SHARED
     src/alpaca/helper.cpp    
 )
 
+# Regonise Include dir 
 target_include_directories(engine_core PUBLIC
     ${PROJECT_SOURCE_DIR}/include
 )
@@ -26,13 +27,23 @@ target_link_libraries(engine_core PUBLIC
     CURL::libcurl
 )
 
-# Pybind11 module
+# Pybind11 
 add_subdirectory(externals/pybind11)
 
 pybind11_add_module(trading_engine
     src/binding/binding.cpp
 )
 
+# Link engine_core to pybind module
+target_link_libraries(trading_engine PRIVATE engine_core)
+
 # Standalone exe
 add_executable(trading_main src/main.cpp)
-target_link_libraries(trading_engine PRIVATE engine_core)
+
+# Add include path for trading_main
+target_include_directories(trading_main PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Link engine_core to trading_main 
+target_link_libraries(trading_main PRIVATE engine_core)
