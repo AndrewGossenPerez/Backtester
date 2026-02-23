@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <array>
 #include <utility>
+#include <stdexcept> 
 
 template <typename T, std::size_t capacity>
 class RingBuffer{
