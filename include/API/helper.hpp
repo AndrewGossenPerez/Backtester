@@ -13,6 +13,6 @@
 
 nlohmann::json httpGet(const std::string& url);
 nlohmann::json httpRequest(const std::string& url, const std::string& method = "GET", const std::string& body = "");
-void addBar(std::vector<trd::Bar>& bars, int N, const std::string& symbol = "AAPL");
+bool addBar(std::vector<trd::Bar>& bars, int N, const std::string& symbol = "AAPL");
 nlohmann::json getAccount();
 nlohmann::json placeOrder(const std::string& symbol, double qty, const std::string& side);

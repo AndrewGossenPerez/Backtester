@@ -89,21 +89,42 @@ long toEpoch(const std::string& isoTime) {
     return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
 }
 
-void addBar(std::vector<trd::Bar>& bars, int N, const std::string& symbol) {
-    nlohmann::json jBars = httpGet("https://data.alpaca.markets/v2/stocks/" + symbol + "/bars?timeframe=1Min&limit=" + std::to_string(N));
-    if (jBars.contains("bars")) {
-        for (const auto& b : jBars["bars"]) {
-            trd::Bar bar;
-            bar.epoch = toEpoch(b["t"].get<std::string>());
-            bar.open = b["o"].get<double>();
-            bar.high = b["h"].get<double>();
-            bar.low = b["l"].get<double>();
-            bar.close = b["c"].get<double>();
-            bar.volume = b["v"].get<int>();
-            bars.push_back(bar);
-        }
+bool addBar(std::vector<trd::Bar>& bars, int N, const std::string& symbol) { 
+
+    auto jBars = httpGet("https://data.alpaca.markets/v2/stocks/" + symbol + "/bars?timeframe=1Min&limit=" + std::to_string(N));
+
+    if (!jBars.contains("bars") || !jBars["bars"].is_array() || jBars["bars"].empty()) {
+        std::cerr << "No bars returned from Alpaca market " << symbol << ", likely closed" << std::endl;
+        return false;
     }
-    std::cout << "Bar GET";
+
+    for (const auto& b : jBars["bars"]) {
+        
+        if (!b.contains("t") || !b.contains("o") || !b.contains("h") ||
+            !b.contains("l") || !b.contains("c") || !b.contains("v")) {
+            std::cerr << "Skipping malformed bar: " << b.dump() << std::endl;
+            continue;
+        }
+
+        trd::Bar bar;
+        bar.epoch = toEpoch(b["t"].get<std::string>());
+        if (bar.epoch == -1) {
+            std::cerr << "Invalid timestamp in bar: " << b.dump() << std::endl;
+            continue;
+        }
+
+        bar.open = b["o"].get<double>();
+        bar.high = b["h"].get<double>();
+        bar.low = b["l"].get<double>();
+        bar.close = b["c"].get<double>();
+        bar.volume = b["v"].get<int>();
+
+        bars.push_back(bar);
+        
+    }
+
+    return true;
+
 }
 
 nlohmann::json getAccount() {
