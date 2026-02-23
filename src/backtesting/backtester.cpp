@@ -89,16 +89,15 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
 
         }
 
-
         while (m_portfolio.balance > 0.0) {
 
             std::cout << "\n Fetching latest two bars... \n";
+            std::cout << "Balance : " << m_portfolio.balance << " | Position : " << descaleQty(m_portfolio.pos) << "\n";    
 
             addBar(newBars, 2); 
 
             std::cout << "Current Bar LE: " << bars.back().epoch << "\n";
             std::cout << "Bar epochs: " << newBars[0].epoch << " | " << newBars[1].epoch << "\n";
-
 
             if (newBars.empty()) {
                 std::this_thread::sleep_for(std::chrono::seconds(waitTime));
@@ -132,7 +131,9 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
 
         }
 
+
         result.finalEquity = m_portfolio.equity(bars.back().close);
+
     }
 
     result.equityPoints = dispatcher.getReportHandler().getEquityPoints();

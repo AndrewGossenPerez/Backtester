@@ -103,6 +103,7 @@ void addBar(std::vector<trd::Bar>& bars, int N, const std::string& symbol) {
             bars.push_back(bar);
         }
     }
+    std::cout << "Bar GET";
 }
 
 nlohmann::json getAccount() {
