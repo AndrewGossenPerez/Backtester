@@ -1,4 +1,3 @@
-
 #include "API/helper.hpp"
 #include "core/types.hpp"
 #include "API/keys.hpp"
@@ -8,13 +7,97 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <ctime>
+#include <iostream>
 
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
+}
+
+long toEpoch(const std::string& isoTime) {
+    std::tm t = {};
+    std::istringstream ss(isoTime);
+    ss >> std::get_time(&t, "%Y-%m-%dT%H:%M:%S");
+    if(ss.fail()) return -1;
+    auto tp = std::chrono::system_clock::from_time_t(std::mktime(&t));
+    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+}
+
+// Returns seconds until next market open (0 implies the market is open right now )
+long timeForMarket() {
+    using namespace std::chrono;
+
+    auto now = system_clock::now();
+    std::time_t t = system_clock::to_time_t(now);
+    std::tm utc_tm = *gmtime(&t);
+
+    int currentMinutes = utc_tm.tm_hour * 60 + utc_tm.tm_min;
+
+    // market hours in UTC time 
+    int openMinutes = 14 * 60 + 30;
+    int closeMinutes = 21 * 60;
+
+    if (currentMinutes >= openMinutes && currentMinutes <= closeMinutes) {
+
+        // Market is open
+        return 0;
+
+    } else if (currentMinutes < openMinutes) {
+
+        // Before market open today
+        int minutesToOpen = openMinutes - currentMinutes;
+        int secondsToOpen = minutesToOpen * 60 - utc_tm.tm_sec; // subtract current seconds
+        return secondsToOpen;
+
+    } else {
+
+        // After market close, wait until next day
+        int minutesToOpenNextDay = (24 * 60 - currentMinutes) + openMinutes;
+        int secondsToOpen = minutesToOpenNextDay * 60 - utc_tm.tm_sec;
+        return secondsToOpen;
+
+    }
+}
+
+bool addBar(std::vector<trd::Bar>& bars, int N, const std::string& symbol) { 
+
+    auto jBars = httpGet("https://data.alpaca.markets/v2/stocks/" + symbol + "/bars?timeframe=1Min&limit=" + std::to_string(N));
+
+    if (!jBars.contains("bars") || !jBars["bars"].is_array() || jBars["bars"].empty()) {
+        std::cerr << "No bars returned from Alpaca market " << symbol << ", likely closed" << std::endl;
+        return false;
+    }
+
+    for (const auto& b : jBars["bars"]) {
+
+        if (!b.contains("t") || !b.contains("o") || !b.contains("h") ||
+            !b.contains("l") || !b.contains("c") || !b.contains("v")) {
+            std::cerr << "Skipping malformed bar: " << b.dump() << std::endl;
+            continue;
+        }
+
+        trd::Bar bar;
+        bar.epoch = toEpoch(b["t"].get<std::string>());
+        if (bar.epoch == -1) {
+            std::cerr << "Invalid timestamp in bar: " << b.dump() << std::endl;
+            continue;
+        }
+
+        bar.open = b["o"].get<double>();
+        bar.high = b["h"].get<double>();
+        bar.low = b["l"].get<double>();
+        bar.close = b["c"].get<double>();
+        bar.volume = b["v"].get<int>();
+
+        bars.push_back(bar);
+        
+    }
+
+    return true;
 
 }
+
 
 nlohmann::json httpGet(const std::string& url) {
 
@@ -44,6 +127,8 @@ nlohmann::json httpGet(const std::string& url) {
     return nlohmann::json::parse(readBuffer);
 
 }
+
+// All htpp functions 
 
 nlohmann::json httpRequest(const std::string& url, const std::string& method, const std::string& body) {
 
@@ -77,53 +162,6 @@ nlohmann::json httpRequest(const std::string& url, const std::string& method, co
     }
 
     return nlohmann::json::parse(readBuffer);
-
-}
-
-long toEpoch(const std::string& isoTime) {
-    std::tm t = {};
-    std::istringstream ss(isoTime);
-    ss >> std::get_time(&t, "%Y-%m-%dT%H:%M:%S");
-    if(ss.fail()) return -1;
-    auto tp = std::chrono::system_clock::from_time_t(std::mktime(&t));
-    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
-}
-
-bool addBar(std::vector<trd::Bar>& bars, int N, const std::string& symbol) { 
-
-    auto jBars = httpGet("https://data.alpaca.markets/v2/stocks/" + symbol + "/bars?timeframe=1Min&limit=" + std::to_string(N));
-
-    if (!jBars.contains("bars") || !jBars["bars"].is_array() || jBars["bars"].empty()) {
-        std::cerr << "No bars returned from Alpaca market " << symbol << ", likely closed" << std::endl;
-        return false;
-    }
-
-    for (const auto& b : jBars["bars"]) {
-        
-        if (!b.contains("t") || !b.contains("o") || !b.contains("h") ||
-            !b.contains("l") || !b.contains("c") || !b.contains("v")) {
-            std::cerr << "Skipping malformed bar: " << b.dump() << std::endl;
-            continue;
-        }
-
-        trd::Bar bar;
-        bar.epoch = toEpoch(b["t"].get<std::string>());
-        if (bar.epoch == -1) {
-            std::cerr << "Invalid timestamp in bar: " << b.dump() << std::endl;
-            continue;
-        }
-
-        bar.open = b["o"].get<double>();
-        bar.high = b["h"].get<double>();
-        bar.low = b["l"].get<double>();
-        bar.close = b["c"].get<double>();
-        bar.volume = b["v"].get<int>();
-
-        bars.push_back(bar);
-        
-    }
-
-    return true;
 
 }
 

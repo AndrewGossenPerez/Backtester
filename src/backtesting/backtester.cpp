@@ -67,16 +67,20 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
         
     }
 
-    else {
+    else { // Live trading on my google cloud VM for paper testing 
+
 
         dispatcher.getReportHandler().getTrades().reserve(5000);
         dispatcher.getReportHandler().getEquityPoints().reserve(5000);
 
-        std::cout << " LIVE TRADING COMMENCED \n ";
-        trd::timestamp lastEpoch = 0;
+        std::cout << " LIVE TRADING COMMENCED, Waiting for market to open \n ";
+        
+        long marketsOpen=timeForMarket();
+        std::cout << "Market open in : " << marketsOpen << ". \n";
+        std::this_thread::sleep_for(std::chrono::seconds(marketsOpen+10));
 
+        trd::timestamp lastEpoch = 0;
         std::cout << " Process initial chunk, bars : " << bars.size() << "\n";
-        // Process initial chunk
 
         for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
             
@@ -95,7 +99,15 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
             std::cout << "Balance : " << m_portfolio.balance << " | Position : " << descaleQty(m_portfolio.pos) << "\n";    
 
             bool success = addBar(newBars, 2); 
-            if (!success) continue;
+            if (!success) {
+                // Check if market is closed and wait until it opens again
+                long secondsToOpen = timeForMarket();
+                if (secondsToOpen > 0) {
+                    std::cout << "Market is closed, waiting for " << secondsToOpen << " seconds until next open...\n";
+                    std::this_thread::sleep_for(std::chrono::seconds(secondsToOpen + 10)); 
+                }
+                continue; 
+            }
 
             std::cout << "Current Bar LE: " << bars.back().epoch << "\n";
             std::cout << "Bar epochs: " << newBars[0].epoch << " | " << newBars[1].epoch << "\n";
