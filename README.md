@@ -33,6 +33,4 @@ Very aggresive scalping approach (NFast 2, NSlow 8) - No risk manager
 - [x] Python interface (WIP)
 - [x] Fixed Fractional Risk Handler with a stopping system
 - [x] EMA (Simple first prototype)
-- [ ] Fixed Fractional, less front exposure
-- [ ] Orderbooking ( Start of a truly low-latency system ) 
-- [ ] Optimisation
+- [x] Fixed Fractional risk manager
