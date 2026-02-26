@@ -10,12 +10,14 @@
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
 #include "strategies/EMA.hpp"
+#include "strategies/SMA.hpp"
+#include "strategies/BuyNHold.hpp"
 #include "data/csv_reader.hpp"
 #include "data/config.hpp"
 
+
 #include <cstdint>
 #include <iostream>
-
 
 namespace py = pybind11;
 
@@ -23,16 +25,22 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/aaplrecent.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/NVDA.csv");
     BacktestPortfolio p;
     p.setBalance(startingEquity);
+    std::cout << "Bar size : " << bars.size() << "\n";
    
     trd::Backtest bt(p);
 
-    ExponentialMovingAverage<12,28> strat(false); 
+    //ExponentialMovingAverage<12,26> strat(true,0.0023); 
+    SMA<50,200> strat(true,0.0023);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat,false);
+
+    //re.fastN=strat.getHistory(true);
+    //re.slowN=strat.getHistory(false);
+
     return re;
 
 }
@@ -57,6 +65,8 @@ static py::dict result_arrays(const trd::Result& r) {
 
     const auto& pts = r.equityPoints;
     const auto& trds = r.trades; 
+    const auto& fastN = r.fastN;
+    const auto& slowN = r.slowN;
 
     const py::ssize_t n = static_cast<py::ssize_t>(pts.size());
 
@@ -80,7 +90,28 @@ static py::dict result_arrays(const trd::Result& r) {
     d["pos"] = std::move(pos);
     d["trades"] = tradelogs_to_pylist(trds);
 
+    // Lookback windows if EMA/SMA was sued 
+    if (slowN.has_value() && fastN.has_value()) { 
+
+        const py::ssize_t size = static_cast<py::ssize_t>(slowN.value().size());
+        auto slowArr = py::array_t<double>(slowN.value().size());
+        auto fastArr = py::array_t<double>(fastN.value().size());
+
+        auto s=slowArr.mutable_unchecked<1>();
+        auto f=fastArr.mutable_unchecked<1>();    
+
+        for (py::ssize_t i = 0; i < size; ++i) {
+            s(i) = static_cast<double>(slowN.value()[i]);
+            f(i) = static_cast<double>(fastN.value()[i]);
+        }   
+
+        d["fastN"] = std::move(fastN);
+        d["slowN"] = std::move(slowN);
+
+    }
+
     return d;
+
 }
 
 

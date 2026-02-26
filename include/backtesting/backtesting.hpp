@@ -10,6 +10,7 @@
 
 #pragma once 
 #include <cstdint>
+#include <optional>
 #include <vector>
 #include "core/types.hpp"
 #include "core/portfolio.hpp"
@@ -54,6 +55,9 @@ struct Result{  // Final backtest result metadata
     std::vector<EquityPoint> equityPoints;
     // Log trades 
     std::vector<TradeLog> trades;
+    // Lookback windows if EMA/SMA was used 
+    std::optional<std::vector<trd::price>> fastN;
+    std::optional<std::vector<trd::price>> slowN;
 
     // Summary fields for the final output 
     trd::price finalEquity{0.0};

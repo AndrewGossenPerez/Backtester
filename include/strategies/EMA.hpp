@@ -13,6 +13,9 @@
 #include "backtesting/strategies.hpp"
 #include "events/events.hpp"
 
+// -- CONFIG 
+constexpr int minCrossovers=2;
+
 
 struct EMA{
     trd::price value{0.0};
@@ -27,7 +30,7 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
     ExponentialMovingAverage(
         std::optional<bool> threshEnabled=std::nullopt,
         std::optional<double> pThresh=std::nullopt
-    ) : m_thresholdEnabled(threshEnabled.value_or(true)),m_pThresh(pThresh.value_or(0.005))  {
+    ) : m_thresholdEnabled(threshEnabled.value_or(true)),m_pThresh(pThresh.value_or(0.00))  {
         std::cout << "EMA set with percentage thresholding : " << (m_thresholdEnabled ? "ENABLED" : "DISABLED") << " , THRESHOLD: " << m_pThresh*100.0 << "% \n";
     } 
 
@@ -57,8 +60,8 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
     void onMarketData(const events::MarketEvent& m) override {
 
         // Update prices 
-        m_fast.push(m.bar.close);
-        m_slow.push(m.bar.close);
+        m_fast.overwrite(m.bar.close);
+        m_slow.overwrite(m.bar.close);
 
         if (m_fast.size() == NFast) {
             computeEMA(m.bar.close, m_fast, true);
@@ -76,20 +79,28 @@ class ExponentialMovingAverage : public Strategy { // An EMA average moving cros
 
             if (m_thresholdEnabled && std::abs(marketChange)<m_pThresh){
                 currentSignal=trd::Side::Hold;
-                return; // Filter out noise and range-based market 
+                return; // Filter out noise 
             }
 
-            currentMarketChange=marketChange;
+            currentMarketChange = marketChange;
             double slope = m_fastEMA.value - prevFast;
             
-            if (m_fastEMA.value>m_slowEMA.value){
-                currentSignal=trd::Side::Buy;
-            } else if (slope < 0 && m_fastEMA.value < m_slowEMA.value){
-                currentSignal=trd::Side::Sell;
-            } else { 
-                currentSignal=trd::Side::Hold;
+            static int crossoverCounter = 0;
+
+            if ((m_fastEMA.value > m_slowEMA.value && slope > 0) || (m_fastEMA.value < m_slowEMA.value && slope < 0)) {
+                crossoverCounter++;
+            } else {
+                crossoverCounter = 0;
             }
 
+            if (crossoverCounter < minCrossovers) { // require 2 consecutive bars before entering 
+                currentSignal = trd::Side::Hold;
+            } else {
+
+                currentSignal = (m_fastEMA.value > m_slowEMA.value) ? trd::Side::Buy : trd::Side::Sell;
+
+            }
+        
             prevFast=m_fastEMA.value;
 
         }

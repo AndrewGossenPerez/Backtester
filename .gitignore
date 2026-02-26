@@ -23,6 +23,10 @@ samples/tesla.csv
 samples/ETHOHLCV.csv
 samples/ETH.csv
 samples/BTCREC3.csv 
+samples/AAPLONEM2.csv 
+samples/NVDA.csv
 
 # Not for you 
 include/API/keys.hpp
+#csv Generator for OHLCV bars 
+python/NVDA.py

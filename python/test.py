@@ -1,4 +1,3 @@
-
 import trading_engine as te
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +13,7 @@ def main():
 
     epoch = np.asarray(d["epoch"], dtype=np.float64)
     equity = np.asarray(d["equity"], dtype=np.float64)
-    pos = np.asarray(d["pos"], dtype=np.float64) 
+    pos = np.asarray(d["pos"], dtype=np.float64)
 
     if epoch.size == 0:
         raise RuntimeError("No data returned")
@@ -55,12 +54,44 @@ def main():
     ax1.plot(x, equity_ds, color="#1f77b4", label="Equity")
     ax1.fill_between(x, starting_equity, equity_ds, color="#1f77b4", alpha=0.1)
     ax1.axhline(starting_equity, color="gray", linestyle="--", linewidth=1, label="Start Equity")
+
+    # --- Fast & Slow MAs
+    if "fastN" in d and "slowN" in d:
+        fast = np.asarray(d["fastN"], dtype=np.float64)
+        slow = np.asarray(d["slowN"], dtype=np.float64)
+
+        # Downsample
+        fast_ds = fast[::step]
+        slow_ds = slow[::step]
+
+        # Align lengths
+        min_len = min(len(x), len(fast_ds), len(slow_ds))
+        x_plot = x[:min_len]
+        fast_plot = fast_ds[:min_len]
+        slow_plot = slow_ds[:min_len]
+
+        # Plot lines
+        ax1.plot(x_plot, fast_plot, color="#2ca02c", linestyle="-", label="Fast MA")
+        ax1.plot(x_plot, slow_plot, color="#d62728", linestyle="-", label="Slow MA")
+
+        # Fill shading between fast/slow MA
+        ax1.fill_between(
+            x_plot, fast_plot, slow_plot,
+            where=fast_plot >= slow_plot,
+            facecolor="#2ca02c", alpha=0.1,
+            interpolate=True
+        )
+        ax1.fill_between(
+            x_plot, fast_plot, slow_plot,
+            where=fast_plot < slow_plot,
+            facecolor="#d62728", alpha=0.1,
+            interpolate=True
+        )
+
     ax1.set_title(title)
     ax1.set_ylabel("Equity ($)")
     ax1.grid(True, which="major", alpha=0.3)
-
-    # Format y-axis with commas and plain numbers
-    ax1.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax1.yaxis.set_major_formatter(FuncFormatter(lambda x_val, _: f"${x_val:,.0f}"))
 
     # Equity stats box
     final_equity = float(equity[-1])
@@ -76,13 +107,13 @@ def main():
         bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.85, edgecolor="0.8"),
     )
 
+    ax1.legend(loc="upper left")
+
     # --- Position plot
     ax2.plot(x, pos_ds, color="#ff7f0e", label="Position")
     ax2.set_xlabel(xlabel)
     ax2.set_ylabel("Position")
     ax2.grid(True, which="major", alpha=0.3)
-
-    # Format y-axis with plain numbers for positions
     ax2.yaxis.set_major_formatter(ScalarFormatter(useOffset=True))
 
     plt.tight_layout()

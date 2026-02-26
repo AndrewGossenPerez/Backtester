@@ -19,6 +19,7 @@
 #include "data/bar.hpp"
 #include "backtesting/backtesting.hpp"
 #include "backtesting/strategies.hpp"
+#include "strategies/BuyNHold.hpp"
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 #include "data/market_state.hpp"

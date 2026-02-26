@@ -6,6 +6,7 @@
 // Design:
 // - Reads the entire file into a contiguous std::string buffer
 // - Parses in-place using pointer arithmetic (no per-field allocations)
+// -- Can now work on YY:MM:DD, YY:MM:DD HH:MM:SS, and timezone formats (though ignored)
 //
 // Notes:
 // - Assumes a header row is present and skips the first line
@@ -19,6 +20,8 @@
 #include <charconv>
 #include <cstdint>
 #include "data/config.hpp"
+#include <cstdint>
+#include <limits>
 
 static std::string readFile(const std::string& file){
 
@@ -93,9 +96,6 @@ static bool parseOHLCV(const char*&p,const char* end, T& out){ // General parser
 
 }
 
-#include <cstdint>
-#include <limits>
-
 static bool parseQuantity(const char*& p, const char* end,std::int64_t scale, std::int64_t& out){
 
     if (p >= end) return false;
@@ -138,53 +138,56 @@ static bool parseQuantity(const char*& p, const char* end,std::int64_t scale, st
 }
 
 static bool parseTimestampField(const char*& p, const char* end, trd::timestamp& out) {
-    
-    // YYYY-MM-DD format 
-    if (end - p >= 10 && p[4] == '-' && p[7] == '-') {
-        unsigned y = digit(p[0])*1000 + digit(p[1])*100 + digit(p[2])*10 + digit(p[3]);
-        unsigned m = digit(p[5])*10 + digit(p[6]);
-        unsigned d = digit(p[8])*10 + digit(p[9]);
-        p += 10;
-        if (p < end && *p == ',') ++p;
 
-        const int64_t days = daysFromEpoch(y, m, d);
-        out = static_cast<trd::timestamp>(days) * 86400 * TS_SCALE;
-        return true;
+    // Must have at least 10 chars for YYYY-MM-DD
+    if (end - p < 10) return false;
+
+    // Check YYYY-MM-DD
+    if (p[4] != '-' || p[7] != '-') return false;
+
+    unsigned y = digit(p[0]) * 1000 + digit(p[1]) * 100 + digit(p[2]) * 10 + digit(p[3]);
+    unsigned m = digit(p[5]) * 10 + digit(p[6]);
+    unsigned d = digit(p[8]) * 10 + digit(p[9]);
+    p += 10;
+
+    // Convert date to epoch (seconds at 00:00:00)
+    int64_t days = daysFromEpoch(y, m, d);
+    int64_t seconds = days * 86400;
+
+    // Skip optional space or comma between date and time
+    if (p < end && (*p == ' ' || *p == ',')) ++p;
+
+    // Parse HH:MM:SS if present
+    if (end - p >= 8 && p[2] == ':' && p[5] == ':') {
+        unsigned hh = digit(p[0]) * 10 + digit(p[1]);
+        unsigned mm = digit(p[3]) * 10 + digit(p[4]);
+        unsigned ss = digit(p[6]) * 10 + digit(p[7]);
+        seconds += hh * 3600 + mm * 60 + ss;
+        p += 8;
     }
 
-    // At this point timestamp is given as an epoch
-
-    if (p >= end || *p < '0' || *p > '9') return false;
-    trd::timestamp secs = 0;
-
-    // Parse the integer seconds
-    do {
-        secs = secs * 10 + (*p - '0');
-        ++p;
-    } while (p < end && *p >= '0' && *p <= '9');
-
-    trd::timestamp frac = 0;
-
-    // Parse the fractional part scaled to TS_SCALE 
+    // Optional fractional seconds
+    int64_t frac = 0;
     if (p < end && *p == '.') {
-
         ++p;
-
         int digits = 0;
-        while (p < end && *p >= '0' && *p <= '9') {
-            if (digits < 6) { // keep only first 6 digits
-                frac = frac * 10 + (*p - '0');
-                ++digits;
-            }
+        while (p < end && *p >= '0' && *p <= '9' && digits < 6) {
+            frac = frac * 10 + (*p - '0');
             ++p;
+            ++digits;
         }
-
-        while (digits < 6) { frac *= 10; ++digits; } // scale to microseconds
-
+        while (digits < 6) { frac *= 10; ++digits; }
     }
 
+    // Skip timezone suffix if present 
+    if (p < end && (*p == '+' || *p == '-') && (end - p >= 6) && p[3] == ':') {
+        p += 6;
+    }
+
+    // Skip trailing comma if present
     if (p < end && *p == ',') ++p;
-    out = secs * TS_SCALE + frac;
+
+    out = seconds * TS_SCALE + frac;
     return true;
 
 }
