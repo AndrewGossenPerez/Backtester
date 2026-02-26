@@ -17,9 +17,8 @@
 #include "backtesting/excecution.hpp"
 #include "events/ring_buffer.hpp"
 
-// -- CONFIG --
-constexpr int ATRBars=8; // Last 14 bars for ATR 
-// ------------
+constexpr int atrBars=4; 
+
 
 struct RiskMetaData{ // Stores the risk for each attempted entry ( Orderbook ) 
     trd::price risk;
@@ -48,26 +47,28 @@ struct RiskData {
 
     double calculateATR(){
 
-        if (barHistory.size() < 2) return 0.0; // Need at least 2 bars
+        if (barHistory.size() < atrBars) return 0.0; // Need at least 2 bars
 
         double sumTR = 0.0;
-        size_t count = barHistory.size() - 1;
+        int N=0;
 
-        for (size_t i = 1; i < barHistory.size(); ++i) {
+        for (size_t i = barHistory.size()-1; i!=0; i--) {
 
             const trd::Bar& curr = barHistory[i];
             const trd::Bar& prev = barHistory[i - 1];
 
-            double highLow = curr.high - curr.low;
-            double highClosePrev = std::abs(curr.high - prev.close);
-            double lowClosePrev = std::abs(curr.low - prev.close);
+            double highMlow = curr.high - curr.low;
+            double highmPrevClose=curr.high-prev.close;
+            double lowMPrevClose=curr.low-prev.close;
+            double TR = std::max({std::abs(highMlow), std::abs(highmPrevClose), std::abs(lowMPrevClose)});
+          //  std::cout << "TR for bar " << curr.epoch << " : " << TR << "\n\n";
 
-            double trueRange = std::max({highLow, highClosePrev, lowClosePrev});
-            sumTR += trueRange;
+            sumTR += TR;
+            N++;
 
         }
 
-        return sumTR / static_cast<double>(count);
+        return sumTR/N;
 
     }
 
@@ -91,7 +92,7 @@ struct RiskData {
 
     bool barCapacity () const { return barHistory.full(); }
 
-    RingBuffer<trd::Bar,ATRBars> barHistory;
+    RingBuffer<trd::Bar,atrBars> barHistory;
     RingBuffer<trd::Bar,5> riskHistory; // Stores last 5 attempted orders, to check if they filled to add to total open 
     trd::price totalOpenRisk=0;
     

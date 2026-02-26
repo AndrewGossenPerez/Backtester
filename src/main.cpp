@@ -2,7 +2,7 @@
 #include "data/csv_reader.hpp"
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
-#include "strategies/EMA.hpp"
+#include "strategies/SmoothEMA.hpp"
 #include "API/helper.hpp"
 
 #include <algorithm>
@@ -17,7 +17,7 @@ int main() {
     LivePortfolio pf;
 
     std::cout << "Live portfolio set up, balance & pos : " << pf.balance << " | " << descaleQty(pf.pos) <<"\n";
-    ExponentialMovingAverage<12,26> strat(false);
+    SmoothEMA<12,26> strat(false);
     trd::Backtest bt(pf);
 
     std::vector<trd::Bar> bars;

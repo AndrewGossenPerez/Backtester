@@ -9,8 +9,7 @@
 
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
-#include "strategies/EMA.hpp"
-#include "strategies/SMA.hpp"
+#include "strategies/SmoothEMA.hpp"
 #include "strategies/BuyNHold.hpp"
 #include "data/csv_reader.hpp"
 #include "data/config.hpp"
@@ -33,13 +32,13 @@ static trd::Result run_backtest(int startingAmount) {
     trd::Backtest bt(p);
 
     //ExponentialMovingAverage<12,26> strat(true,0.0023); 
-    SMA<50,200> strat(true,0.0023);
+    SmoothEMA<2,8> strat(true,0.0,0.5,0.2);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat,false);
 
-    //re.fastN=strat.getHistory(true);
-    //re.slowN=strat.getHistory(false);
+    re.fastN=strat.getHistory(true);
+    re.slowN=strat.getHistory(false);
 
     return re;
 
@@ -67,30 +66,35 @@ static py::dict result_arrays(const trd::Result& r) {
     const auto& trds = r.trades; 
     const auto& fastN = r.fastN;
     const auto& slowN = r.slowN;
+    const auto& stockPrice = r.stockCloses;
 
     const py::ssize_t n = static_cast<py::ssize_t>(pts.size());
 
     auto epoch = py::array_t<std::int64_t>(n);
     auto equity = py::array_t<double>(n);
     auto pos = py::array_t<double>(n);
+    auto stock = py::array_t<double>(n);
 
     auto e = epoch.mutable_unchecked<1>();
     auto q = equity.mutable_unchecked<1>();
     auto p = pos.mutable_unchecked<1>();
+    auto s = stock.mutable_unchecked<1>();
 
     for (py::ssize_t i = 0; i < n; ++i) {
         e(i) = static_cast<std::int64_t>(pts[i].epoch);
         q(i) = static_cast<double>(pts[i].equity);
         p(i) = static_cast<double>(pts[i].pos);
+        s(i) = static_cast<double>(stockPrice[i]);
     }
 
     py::dict d;
     d["epoch"] = std::move(epoch);
     d["equity"] = std::move(equity);
     d["pos"] = std::move(pos);
+    d["stock"] = std::move(stock);
     d["trades"] = tradelogs_to_pylist(trds);
 
-    // Lookback windows if EMA/SMA was sued 
+    // Lookback windows if EMA/SMA was used 
     if (slowN.has_value() && fastN.has_value()) { 
 
         const py::ssize_t size = static_cast<py::ssize_t>(slowN.value().size());

@@ -51,6 +51,8 @@ struct Trade{ // An excecuted trade during a FillEvent evnet
 
 struct Result{  // Final backtest result metadata 
 
+    // Stock price 
+    std::vector<trd::price> stockCloses;
     // Equity curve marked each bar 
     std::vector<EquityPoint> equityPoints;
     // Log trades 

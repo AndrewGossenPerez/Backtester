@@ -64,10 +64,13 @@ class RingBuffer{
         return m_buffer[m_head];
     }
 
+    T& back() noexcept{
+        return m_buffer[(m_tail + capacity - 1) % capacity];
+    }
+
     T& operator[](std::size_t index) { 
         if (index>=m_count) throw std::out_of_range("RingBuffer index out of range");
-        std::size_t realIndex=(m_head+index)&capacity;
-        return m_buffer[realIndex];
+        return m_buffer[index];
     }
 
     static constexpr std::size_t getCapacity() noexcept {

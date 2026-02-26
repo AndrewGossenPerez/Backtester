@@ -37,7 +37,7 @@
 #include "pipeline/stop_manager.hpp"
 
 // Risk layers 
-#include "risklayers/fixed_fractional.hpp"
+#include "risklayers/fixed_fractional_simple.hpp"
 
 namespace events{
 
@@ -56,7 +56,7 @@ class Dispatcher{
     {
         // Set the risk handler
         m_handlerRisk.current=FixedFractionalRisk<Dispatcher>;
-        //m_handlerRisk.current=FollowThrough;
+       // m_handlerRisk.current=FollowThrough;
 
     }
 

@@ -12,19 +12,15 @@
 #include "core/portfolio.hpp"
 #include "pipeline/risk_handler.hpp"
 
-// ------- CONFIG ---------------------------------
+// ------- CONFIG -----
+float risk=0.02; // 2% of spending power 
+float barsReq=2; // Bars until pyramiding allowed 
+float atrMult=1.5; // How much we multiply ATR by to get a stop distance 
+float minStopPct=0.75;
+float exitPct=0.7; // How much to exit by when selling 
+// --------------------
 
-// Core risk parameters
-constexpr double RISK_PER_TRADE = 0.015; // 1.5% equity stake 
-constexpr double ATR_MULT = 1.75; // Stop distance is ATR * multiplier
-constexpr double MIN_STOP_PCT = 0.003; // 0.3% minimum stop
-constexpr bool ALLOW_ON_LOSS=false; // Allow adding to losing positions
-// Pyramiding 
-constexpr int MAX_ADDS = 2; // Max number of adds per trend to limit pyramiding 
-// Exiting
-constexpr double ATR_CONTRACTION = 0.5; // 50% of peak
-constexpr double EXIT_FRAC = 0.7; // When selling, what % of the normal buy qty to sell by
-// ------------------------------------------
+int consecutiveTrend=0;
 
 template <typename DispatchT>
 void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event) {
@@ -34,78 +30,47 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
     const auto& market = riskData.m_marketState;
     if (!market.current.epoch) return;
 
-    const trd::Bar& bar = market.current;
+    const trd::Bar& bar = market.current; // Current market bar, no look ahead bias 
+    double spendingPower = riskData.m_portfolio.balance;
+    if (spendingPower <= 0.0) return;
 
-    double equity = riskData.m_portfolio.equity(bar.close);
-    if (equity <= 0.0) return;
-
-    // stopDist calculation
+    // Stop loss 
     double stopDist = 0.0;
+    double stopPrice = 0.0;
     double atr=riskData.calculateATR();
-    if (atr < 0.001 * bar.close) return; // skip tiny moves
 
     if (riskData.barCapacity()) { // If there are enough atr bars 
-        stopDist = ATR_MULT * atr;
+        stopDist = bar.close * ( (atr/bar.close) * atrMult );
+        stopPrice=  bar.close-stopDist;
     } else {
-        stopDist = bar.close * MIN_STOP_PCT;
+        stopPrice = bar.close * minStopPct;
+        stopDist = bar.close - stopPrice;
     }
 
-    stopDist = std::max(stopDist, bar.close * MIN_STOP_PCT);
-    stopDist *= (1.0 + (SLIP_BPS/10000.0));
-
-    double allowableRisk = equity * RISK_PER_TRADE; // the FixedFraction 
-    double currentQty  = descaleQty(riskData.m_portfolio.pos);
-
-    if (currentQty > 0) {
-        riskData.peakATR = riskData.peakATR ? std::max(*riskData.peakATR, atr) : atr;
-    } else {
-        riskData.peakATR.reset();
-    }
+    double allowablePosition = (spendingPower*risk)/(stopDist);
 
     // Selling
-    trd::price averagePrice = riskData.m_portfolio.avgPrice();
-    double lossPct = (averagePrice-bar.close)/averagePrice;
+    double currentQty = descaleQty(riskData.m_portfolio.pos);
+    if (event.side == trd::Side::Sell) {
+          
+        double sellQty = currentQty * exitPct;
+        if (sellQty <= 0) return;
 
-    if (event.side == trd::Side::Sell && riskData.peakATR.has_value()) {
-        if (atr < ATR_CONTRACTION * (*riskData.peakATR)) {
-            
-            double sellQty = currentQty * EXIT_FRAC;
-            if (sellQty <= 0) return;
+        trd::quantity scaledSell = static_cast<trd::quantity>(sellQty * QTY_SCALE);
 
-            trd::quantity scaledSell = static_cast<trd::quantity>(sellQty * QTY_SCALE);
+        riskData.m_dispatcher.schedule(events::OrderEvent{
+            event.epoch,
+            trd::Side::Sell,
+            scaledSell
+        });
 
-            riskData.m_dispatcher.schedule(events::OrderEvent{
-                event.epoch,
-                trd::Side::Sell,
-                scaledSell
-            });
-
-            return;
-        }
+        return;
         
     } 
 
-
-    double openPnL = (bar.close - averagePrice) * currentQty;
-    if ( (averagePrice>0 && currentQty > 0 && openPnL < 0.0) || ALLOW_ON_LOSS) return; // Only prevent adding if losing
-    double maxThisRisk = allowableRisk * MAX_ADDS;
-    if (riskData.totalOpenRisk + allowableRisk >= maxThisRisk) return; // Safeguard, prevent this fill from going over the risk budget 
-
-    double addRisk = allowableRisk;
-    double addQty  = addRisk / stopDist;
-
-    if (addQty <= 0.0) return;
-
-    trd::quantity scaledQty = static_cast<trd::quantity>(addQty * QTY_SCALE);
-    if (scaledQty <= 0) return;
-
-    double entryPrice = bar.close;
-    double stopPrice  = entryPrice - stopDist;
-
-    if (bar.low <= stopPrice) return;  // Don't enter if stop will be hit immediately, prevents stupid fills 
-
-    //std::cout << "Equity is : " << riskData.m_portfolio.equity() << "\n";
-    //std::cout << "Booking order for qty: " << descaleQty(scaledQty) << " @ " << descaleQty(scaledQty)*bar.close << "\n";
+    trd::quantity scaledQty = static_cast<trd::quantity>(allowablePosition * QTY_SCALE);
+    
+    if (spendingPower*allowablePosition <= 0.0 || scaledQty <= 0 ) return; 
 
     std::optional<stopData> stop=stopData{
         event.epoch,

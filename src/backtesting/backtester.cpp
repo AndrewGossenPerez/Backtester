@@ -52,16 +52,22 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
 
         std::cout << " NON LIVE BACKTESTING COMMENCED \n ";
 
+        result.stockCloses.reserve(bars.size());
+
         // Historical backtest
         for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
+
             if (m_portfolio.balance <= 0.0) break;
 
             if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
             marketState.current = bars[i];
             marketState.next = bars[i + 1];
 
+            result.stockCloses.push_back(marketState.current.close);
+
             dispatcher.schedule(events::MarketEvent{ marketState.current, marketState.next});
             dispatcher.run();
+
         }
 
         result.finalEquity = m_portfolio.equity(bars.back().close);
