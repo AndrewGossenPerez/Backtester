@@ -16,15 +16,7 @@ __pycache__/
 
 # My own stuff
 .vscode/
-samples/Bitcoin.csv
-samples/BTCREC.csv
-samples/BTCREC2.csv
-samples/tesla.csv
-samples/ETHOHLCV.csv
-samples/ETH.csv
-samples/BTCREC3.csv 
-samples/AAPLONEM2.csv 
-samples/NVDA.csv
+samples/
 
 # Not for you 
 include/API/keys.hpp
