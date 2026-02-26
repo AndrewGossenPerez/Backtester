@@ -13,14 +13,13 @@
 #include "pipeline/risk_handler.hpp"
 
 // ------- CONFIG -----
-float risk=0.02; // 2% of spending power 
-float barsReq=2; // Bars until pyramiding allowed 
-float atrMult=1.5; // How much we multiply ATR by to get a stop distance 
+float risk=0.02; // 2% of equity can be staked per trade 
+float barsReq=2; // Bars until pyramiding allowed (Will implement later)
+float atrMult=1.55; // How much we multiply ATR by to get a stop distance 
 float minStopPct=0.75;
 float exitPct=0.7; // How much to exit by when selling 
 // --------------------
 
-int consecutiveTrend=0;
 
 template <typename DispatchT>
 void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event) {
@@ -31,10 +30,10 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
     if (!market.current.epoch) return;
 
     const trd::Bar& bar = market.current; // Current market bar, no look ahead bias 
-    double spendingPower = riskData.m_portfolio.balance;
+    double spendingPower = riskData.m_portfolio.equity(bar.close);
     if (spendingPower <= 0.0) return;
 
-    // Stop loss 
+    // --- Stop loss calculation
     double stopDist = 0.0;
     double stopPrice = 0.0;
     double atr=riskData.calculateATR();
@@ -49,8 +48,9 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
 
     double allowablePosition = (spendingPower*risk)/(stopDist);
 
-    // Selling
+    // --- Selling on a sell signal, exiting by the exit percentage in config 
     double currentQty = descaleQty(riskData.m_portfolio.pos);
+
     if (event.side == trd::Side::Sell) {
           
         double sellQty = currentQty * exitPct;
@@ -72,6 +72,7 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
     
     if (spendingPower*allowablePosition <= 0.0 || scaledQty <= 0 ) return; 
 
+    // --- Schedule a stop loss ( This is for backtesting only )
     std::optional<stopData> stop=stopData{
         event.epoch,
         trd::Side::Buy,

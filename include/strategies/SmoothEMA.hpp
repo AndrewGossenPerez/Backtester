@@ -1,6 +1,4 @@
-
 // SmoothEMA.hpp, created by Andrew Gossen 
-
 
 #pragma once
 #include <cstdint>
@@ -26,15 +24,7 @@ class SmoothEMA : public Strategy {
           m_pThresh(pThresh.value_or(0.002)),
           m_alphaFast(alphaFast.value_or(0.25f)),
           m_alphaSlow(alphaSlow.value_or(0.08f))
-    {
-
-        std::cout << "Smooth EMA initialised :) :\n"
-                  << "   Threshold Enabled : " << (m_thresholdEnabled ? "YES HOMIE" : "NO HOMIE") 
-                  << ", pThresh: " << m_pThresh*100.0 << "%\n"
-                  << "  Fast alpha: " << m_alphaFast << "\n"
-                  << "  Slow alpha: " << m_alphaSlow << "\n";
-
-    }
+        {}
 
     Signal onBar(const trd::Bar&) override {
         return {currentSignal, currentMarketChange};
@@ -71,7 +61,7 @@ class SmoothEMA : public Strategy {
     void onMarketData(const events::MarketEvent& m) override {
         float price = m.bar.close;
 
-        // --- Compute EMA ---
+        // --- Compute EMA 
         m_fastEMA = m_fastHistory.empty() ? price : m_alphaFast * price + (1.0f - m_alphaFast) * m_fastEMA;
 
         m_slowEMA = m_slowHistory.empty() ? price : m_alphaSlow * price + (1.0f - m_alphaSlow) * m_slowEMA;
@@ -79,13 +69,13 @@ class SmoothEMA : public Strategy {
         m_fastHistory.push_back(m_fastEMA);
         m_slowHistory.push_back(m_slowEMA);
 
-        // --- Market change for threshold ---
+        // --- Market change for threshold 
         currentMarketChange = (m_fastEMA - m_slowEMA) / m_slowEMA;
 
         if (m_thresholdEnabled && std::abs(currentMarketChange) < m_pThresh) {
             currentSignal = trd::Side::Hold;
         } else {
-            // --- Trend logic based on EMA crossover ---
+            // --- Trend logic based on EMA crossover 
             if (m_fastEMA > m_slowEMA) currentSignal = trd::Side::Buy;
             else if (m_fastEMA < m_slowEMA) currentSignal = trd::Side::Sell;
             else currentSignal = trd::Side::Hold;
