@@ -28,11 +28,10 @@ Buy/Hold NVDA
 
 *Dataset: ~7.6M-row Bitcoin OHLCV dataset, Coinflip strategy ~ fills every 2nd bar, FF risk layer.*
 
-## Features
+## Current features 
 - [x] Modular strategy framework
 - [x] Historical CSV market-data ingestion
 - [x] Event-driven backtesting engine
 - [x] Python interface (WIP)
-- [x] Fixed Fractional Risk Handler with a stopping system
 - [x] EMA Signaller 
 - [ ] Risk manager (Position sizer using volatility)
