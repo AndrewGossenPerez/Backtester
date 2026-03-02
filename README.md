@@ -34,6 +34,5 @@ Buy/Hold NVDA
 - [x] Event-driven backtesting engine
 - [x] Python interface (WIP)
 - [x] Fixed Fractional Risk Handler with a stopping system
-- [x] EMA (Simple first prototype)
-- [ ] Volatility scaling
-- [ ] Shorting
+- [x] EMA Signaller 
+- [ ] Risk manager (Position sizer using volatility)
