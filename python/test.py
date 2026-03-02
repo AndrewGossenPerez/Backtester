@@ -1,137 +1,156 @@
+
+# Analysis layer for now, protoype. Will likely swap to a different library later 
+
 import trading_engine as te
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter, ScalarFormatter
+from matplotlib.widgets import Button
 
-# ------------------------
-# Equty and position over time 
-# ------------------------
-def plot_equity_and_position(epoch, equity, pos, TIME_SCALE=1, nmax=10_000_000):
-    step = max(1, epoch.size // nmax)
+def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_SCALE=1, nmax=10_000_000):
+    
+    trend_padding=(equity/30)
+
+    step = max(1, len(epoch) // nmax)
     x = (epoch - epoch[0]) / (86400.0 * TIME_SCALE)
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12,6), sharex=True)
+    fig = plt.figure(figsize=(12, 6))
+    gs = fig.add_gridspec(3, 1, height_ratios=[1.7, 1.2, 1])
 
-    # --- Equity subplot ---
-    ax1.plot(x[::step], equity[::step], color="#1f77b4", label="Equity")
-    ax1.fill_between(x[::step], equity[0], equity[::step], color="#1f77b4", alpha=0.1)
-    ax1.axhline(equity[0], color="gray", linestyle="--", linewidth=1, label="Start Equity")
-    ax1.set_ylabel("Equity ($)")
-    ax1.set_title("Equity Over Time")
-    ax1.grid(True, alpha=0.3)
-    ax1.yaxis.set_major_formatter(FuncFormatter(lambda val, _: f"${val:,.0f}"))
-    ax1.legend(loc="upper left")
+    ax_stock = fig.add_subplot(gs[0])
+    ax_equity = fig.add_subplot(gs[1], sharex=ax_stock)
+    ax_pos = fig.add_subplot(gs[2], sharex=ax_stock)
 
-    # --- Position subplot ---
-    ax2.plot(x[::step], pos[::step], color="#ff7f0e", label="Position")
-    ax2.set_ylabel("Position")
-    ax2.set_xlabel("Days elapsed")
-    ax2.set_title("Position Over Time")
-    ax2.yaxis.set_major_formatter(ScalarFormatter(useOffset=True))
-    ax2.grid(True, alpha=0.3)
-    ax2.legend(loc="upper left")
+    ax_stock.plot(x[::step], stock[::step], label="Stock", color="#9467bd")
 
-    # --- Add PnL summary box on equity plot ---
+    if fastN is not None and len(fastN) > 0:
+        fast_full = np.full(len(stock), np.nan)
+        fast_full[-len(fastN):] = fastN
+        ax_stock.plot(x, fast_full-trend_padding, label="Fast Lookback", color="#2ca02c")
+
+    if slowN is not None and len(slowN) > 0:
+        slow_full = np.full(len(stock), np.nan)
+        slow_full[-len(slowN):] = slowN
+        ax_stock.plot(x, slow_full-trend_padding, label="Slow Lookback", color="#d62728")
+
+    # --- Buy/sell markers
+    buy_scatter = None
+    sell_scatter = None
+
+    if trades is not None:
+        buys_x, buys_y = [], []
+        sells_x, sells_y = [], []
+
+        for t in trades:
+            idx = np.searchsorted(epoch, t["epoch"])
+            if 0 <= idx < len(stock):
+                if t["side"] == 0:
+                    buys_x.append(x[idx])
+                    buys_y.append(stock[idx])
+                elif t["side"] == 1:
+                    sells_x.append(x[idx])
+                    sells_y.append(stock[idx])
+
+        if buys_x:
+            buy_scatter = ax_stock.scatter(buys_x, buys_y, marker="^", s=70, label="Buy")
+        if sells_x:
+            sell_scatter = ax_stock.scatter(sells_x, sells_y, marker="v", s=70, label="Sell")
+
+    ax_stock.set_title("Backtest results")
+    ax_stock.set_ylabel("Price ($)")
+    ax_stock.grid(True, alpha=0.3)
+    # legend moved outside so it doesn't overlap data
+    ax_stock.legend(loc="upper left", bbox_to_anchor=(1.01, 1))
+
+    #Equity  
+    ax_equity.plot(x[::step], equity[::step], label="Equity")
+    ax_equity.axhline(equity[0], linestyle="--", linewidth=1, label="Start")
+    ax_equity.set_ylabel("Equity ($)")
+    ax_equity.yaxis.set_major_formatter(FuncFormatter(lambda val, _: f"${val:,.0f}"))
+    ax_equity.grid(True, alpha=0.3)
+
+    # Stats
     start_eq = equity[0]
     final_eq = equity[-1]
     pnl = final_eq - start_eq
 
-    # Max Drawdown
     roll_max = np.maximum.accumulate(equity)
     drawdowns = (roll_max - equity) / roll_max
     max_dd = np.max(drawdowns) if len(drawdowns) > 0 else 0
 
-    textstr = '\n'.join((
-        f"Starting Equity: ${start_eq:,.0f}",
-        f"Final Equity: ${final_eq:,.0f}",
-        f"Total PnL: ${pnl:,.0f} ({(pnl/start_eq)*100:.2f}%)",
-        f"Max Drawdown: {max_dd*100:.2f}%"
-    ))
+    stats = (
+        f"Start: ${start_eq:,.0f}\n"
+        f"Final: ${final_eq:,.0f}\n"
+        f"PnL: ${pnl:,.0f} ({(pnl/start_eq)*100:.2f}%)\n"
+        f"Max DD: {max_dd*100:.2f}%"
+    )
 
-    # place a text box in upper right in axes coords
-    ax1.text(0.98, 0.95, textstr, transform=ax1.transAxes, fontsize=10,
-             verticalalignment='top', horizontalalignment='right',
-             bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.8))
+    # stats moved outside so it doesn't overlap data
+    ax_equity.text(
+        1.01, 0.95,
+        stats,
+        transform=ax_equity.transAxes,
+        verticalalignment="top",
+        horizontalalignment="left",
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
+    )
 
-    plt.tight_layout()
-    return fig, ax1, ax2
-# ------------------------
-# Stock + trend lines and buy/sell markers 
-# ------------------------
+    #Position 
+    ax_pos.plot(x[::step], pos[::step], label="Position")
+    ax_pos.set_ylabel("Position")
+    ax_pos.set_xlabel("Days Elapsed")
+    ax_pos.yaxis.set_major_formatter(ScalarFormatter(useOffset=True))
+    ax_pos.grid(True, alpha=0.3)
 
-def plot_stock_trends(epoch, stock, fastN=None, slowN=None, trades=None, TIME_SCALE=1, nmax=10_000_000, pad_fraction=0.2):
-    """
-    pad_fraction: fraction of stock range to shift trend lines down
-    """
-    step = max(1, epoch.size // nmax)
-    x = (epoch - epoch[0]) / (86400.0 * TIME_SCALE)
-
-    fig, ax = plt.subplots(figsize=(12,4))
-    ax.plot(x[::step], stock[::step], color="#9467bd", label="Stock")  # purple
-
-    # Determine padding
-    stock_min, stock_max = np.min(stock), np.max(stock)
-    padding = pad_fraction * (stock_max - stock_min)
-
-    # --- Trend lines as full-length arrays with NaNs for warmup ---
-    if fastN is not None and slowN is not None:
-        fast_full = np.full(len(epoch), np.nan)
-        slow_full = np.full(len(epoch), np.nan)
-        fast_full[-len(fastN):] = fastN
-        slow_full[-len(slowN):] = slowN
-
-        # Apply padding downward
-        fast_full_padded = fast_full - padding
-        slow_full_padded = slow_full - padding
-
-        ax.plot(x, fast_full_padded, color="#2ca02c", linestyle="-", label="Fast EMA")  # green
-        ax.plot(x, slow_full_padded, color="#d62728", linestyle="-", label="Slow EMA")  # red
-
-        # Shading between padded trend lines
-        ax.fill_between(x, fast_full_padded, slow_full_padded, where=fast_full_padded >= slow_full_padded, facecolor="#2ca02c", alpha=0.1, interpolate=True)
-        ax.fill_between(x, fast_full_padded, slow_full_padded, where=fast_full_padded < slow_full_padded, facecolor="#d62728", alpha=0.1, interpolate=True)
-
-    # --- Buy/Sell markers ---
-    if trades is not None:
-        buys_x, buys_y = [], []
-        sells_x, sells_y = [], []
-        for t in trades:
-            idx = np.searchsorted(epoch, t['epoch'])
-            if 0 <= idx < len(stock):
-                if t['side'] == 0:  # Buy
-                    buys_x.append(x[idx])
-                    buys_y.append(stock[idx])
-                elif t['side'] == 1:  # Sell
-                    sells_x.append(x[idx])
-                    sells_y.append(stock[idx])
-        if buys_x:
-            ax.scatter(buys_x, buys_y, color='green', marker='o', s=50, label='Buy')
-        if sells_x:
-            ax.scatter(sells_x, sells_y, color='red', marker='o', s=50, label='Sell')
-
-    ax.set_xlabel("Days elapsed")
-    ax.set_ylabel("Price ($)")
-    ax.set_title("Stock Price & Trend Lines with Buy/Sell Signals")
-    ax.grid(True, alpha=0.3)
-
-    # Remove duplicate labels
-    handles, labels = ax.get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    ax.legend(by_label.values(), by_label.keys())
+    # Remove duplicates
+    for ax in [ax_equity, ax_pos]:
+        handles, labels = ax.get_legend_handles_labels()
+        if handles:
+            ax.legend()
 
     plt.tight_layout()
-    return fig, ax
+    # make room for right-side legend/stats and bottom button
+    plt.subplots_adjust(hspace=0.15, right=0.80, bottom=0.12)
 
-# ------------------------
-# Main
-# ------------------------
+    # --- Toggle Button (hide/show buy/sell markers)
+    ax_button = plt.axes([0.85, 0.02, 0.12, 0.05])
+    toggle_button = Button(ax_button, "Show buy/sells")
+
+    def toggle_trades(event):
+        any_visible = False
+        if buy_scatter is not None and buy_scatter.get_visible():
+            any_visible = True
+        if sell_scatter is not None and sell_scatter.get_visible():
+            any_visible = True
+
+        new_state = not any_visible
+
+        if buy_scatter is not None:
+            buy_scatter.set_visible(new_state)
+        if sell_scatter is not None:
+            sell_scatter.set_visible(new_state)
+
+        toggle_button.label.set_text("Hide buy/sells" if new_state else "Show buy/sells")
+        fig.canvas.draw_idle()
+
+    toggle_button.on_clicked(toggle_trades)
+
+    # Prevent garbage collection of widgets/artists
+    fig._toggle_button = toggle_button
+    fig._buy_scatter = buy_scatter
+    fig._sell_scatter = sell_scatter
+
+    return fig
+
 
 def main():
+
     TIME_SCALE = int(te.TIME_SCALE)
     starting_equity = 1_000
-    print("Starting Backtest ...")
+
+    print("Starting Backtest...")
     d = te.run_arrays(starting_equity)
-    print("Back test completed, plotting...")
+    print("Backtest complete. Plotting...")
 
     epoch = np.asarray(d["epoch"], dtype=np.float64)
     equity = np.asarray(d["equity"], dtype=np.float64)
@@ -139,19 +158,11 @@ def main():
     stock = np.asarray(d.get("stock", np.zeros_like(epoch)), dtype=np.float64)
     fastN = np.asarray(d.get("fastN", []), dtype=np.float64)
     slowN = np.asarray(d.get("slowN", []), dtype=np.float64)
-    trades = d.get("trades", None)  # list of dicts with 'epoch' and 'side'
+    trades = d.get("trades", None)
 
-    # Interactive mode so both windows show simultaneously
-    plt.ion()
+    fig = plot_all(epoch, stock, equity, pos,fastN, slowN, trades, TIME_SCALE)
 
-    # Equity + Position window
-    plot_equity_and_position(epoch, equity, pos, TIME_SCALE)
-
-    # Stock + Trend lines + Buy/Sell markers window
-    plot_stock_trends(epoch, stock, fastN, slowN, trades, TIME_SCALE)
-
-    # Show all
-    plt.show(block=True)
+    plt.show()
 
 if __name__ == "__main__":
     main()

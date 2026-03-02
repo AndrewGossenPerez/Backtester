@@ -1,7 +1,7 @@
 // stop_manager.hpp, created by Andrew Gossen
 
 // ----- 
-// Closes open positions if a stop price is hit
+// Closes open positions if a stop price is hit, normally would be done by Alpaca apis this is only for backtesting accuracy
 // -----
 
 #pragma once
@@ -10,9 +10,6 @@
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 
-// --------- CONFIG  -------------
-double trailingFactor=0.55; // 50%
-// ------------------------------
 
 template <typename DispatchT>
 class StopHandler {
@@ -25,8 +22,8 @@ class StopHandler {
     void on(const events::FillEvent& ev){
 
         //if (ev.side==trd::Side::Buy) std::cout << " BOUGHT FOR QTY: " << descaleQty(ev.qty) << " PX : " << ev.px << " EPOCH: " << ev.epoch << "\n";
-        if (ev.stop.has_value()){
-            m_stops.overwrite(std::move(ev.stop.value()));
+        if (ev.stop.has_value() && ev.side==trd::Side::Buy){
+            m_stops.push_back(std::move(ev.stop.value()));
         }
 
     }
@@ -39,28 +36,24 @@ class StopHandler {
         
         for (std::size_t i=0;i<m_stops.size();i++){
 
-            stopData data;
-            m_stops.pop(data);
-
-
-            // Trailing stop 
-            if (data.side == trd::Side::Buy) {
-                double newStop = current.close - data.trailDist * trailingFactor;
-                if (newStop > data.stopPrice) data.stopPrice = newStop;  // Only move stop up
-            }
-
             // Stop hit at this point 
-            if (data.side == trd::Side::Buy && current.low <= data.stopPrice) {
+            if (current.low <= m_stops[i].stopPrice) {
+
+                std::cout << "Sell";
 
                 m_dispatcher.schedule(
                     events::OrderEvent{
-                        data.epoch,
+                        m_stops[i].epoch,
                         trd::Side::Sell,
-                        data.qty
+                        m_stops[i].qty
                     }
                 );
 
+                m_stops.erase(m_stops.begin() + i);
+                std::cout << "P9p";
+
                 continue; 
+
             }
 
         }
@@ -72,6 +65,6 @@ class StopHandler {
     DispatchT& m_dispatcher;
     Portfolio& m_portfolio;
     trd::MarketState& m_marketState;
-    RingBuffer<stopData,128> m_stops;
+    std::vector<stopData> m_stops;
 
 };

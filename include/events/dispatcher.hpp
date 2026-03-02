@@ -55,8 +55,8 @@ class Dispatcher{
     m_handlerStop(*this,portfolio,marketState)
     {
         // Set the risk handler
-        m_handlerRisk.current=FixedFractionalRisk<Dispatcher>;
-       // m_handlerRisk.current=FollowThrough;
+       //m_handlerRisk.current=FixedFractionalRisk<Dispatcher>;
+        m_handlerRisk.current=FollowThrough;
 
     }
 

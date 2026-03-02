@@ -1,15 +1,20 @@
-// SmoothEMA.hpp, created by Andrew Gossen 
+// SmoothEMA.hpp, created by Andrew Gossen - LOVE SOSA :-) 
 
 #pragma once
 #include <cstdint>
 #include <vector>
 #include <optional>
 #include <iostream>
+#include <cmath>         
 #include "core/types.hpp"
 #include "core/portfolio.hpp"
 #include "backtesting/excecution.hpp"
 #include "backtesting/strategies.hpp"
 #include "events/events.hpp"
+
+// --- CONFIG -------
+double minCrossover=1.0; // FastEma must be > minCrossOver * slowEma to trigger a buy, and vice versa for sell
+// ------------------
 
 template <std::size_t NFast, std::size_t NSlow>
 class SmoothEMA : public Strategy {
@@ -21,16 +26,17 @@ class SmoothEMA : public Strategy {
               std::optional<float> alphaFast = std::nullopt,
               std::optional<float> alphaSlow = std::nullopt)
         : m_thresholdEnabled(threshEnabled.value_or(true)),
-          m_pThresh(pThresh.value_or(0.002)),
-          m_alphaFast(alphaFast.value_or(0.25f)),
-          m_alphaSlow(alphaSlow.value_or(0.08f))
+          m_pThresh(pThresh.value_or(0.001)),
+          // If not provide it wil be calculated from alpha = 2/(N+1)
+          m_alphaFast(alphaFast.value_or(2.0f / (static_cast<float>(NFast) + 1.0f))),
+          m_alphaSlow(alphaSlow.value_or(2.0f / (static_cast<float>(NSlow) + 1.0f)))
         {}
 
     Signal onBar(const trd::Bar&) override {
         return {currentSignal, currentMarketChange};
     }
 
-    // This is for plotting 
+    // This is for plotting for the py analysis 
     std::vector<trd::price>& getHistory(bool isFast) {
         return isFast ? m_fastHistory : m_slowHistory;
     }
@@ -76,12 +82,14 @@ class SmoothEMA : public Strategy {
             currentSignal = trd::Side::Hold;
         } else {
             // --- Trend logic based on EMA crossover 
-            if (m_fastEMA > m_slowEMA) currentSignal = trd::Side::Buy;
-            else if (m_fastEMA < m_slowEMA) currentSignal = trd::Side::Sell;
-            else currentSignal = trd::Side::Hold;
+            if (m_fastEMA > m_slowEMA) { 
+                currentSignal = trd::Side::Buy;
+            } else if (m_fastEMA < m_slowEMA) {
+                currentSignal = trd::Side::Sell;
+            } else { currentSignal = trd::Side::Hold; } 
         }
 
         m_signalHistory.push_back(currentSignal);
     }
 
-};
+};  

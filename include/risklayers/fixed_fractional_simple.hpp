@@ -15,9 +15,9 @@
 // ------- CONFIG -----
 float risk=0.02; // 2% of equity can be staked per trade 
 float barsReq=2; // Bars until pyramiding allowed (Will implement later)
-float atrMult=1.55; // How much we multiply ATR by to get a stop distance 
-float minStopPct=0.75;
-float exitPct=0.7; // How much to exit by when selling 
+float atrMult=1.5; // How much we multiply ATR by to get a stop distance 
+float minStopPct=0.5;
+float exitPct=0.6; // How much to exit by when selling 
 // --------------------
 
 
@@ -51,10 +51,10 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
     // --- Selling on a sell signal, exiting by the exit percentage in config 
     double currentQty = descaleQty(riskData.m_portfolio.pos);
 
-    if (event.side == trd::Side::Sell) {
+    if (event.side == trd::Side::Sell && riskData.m_portfolio.pos>0) {
           
         double sellQty = currentQty * exitPct;
-        if (sellQty <= 0) return;
+        if (sellQty <= 0 || riskData.m_portfolio.pos<sellQty) return;
 
         trd::quantity scaledSell = static_cast<trd::quantity>(sellQty * QTY_SCALE);
 
@@ -72,12 +72,14 @@ void FixedFractionalRisk(RiskData<DispatchT>& riskData, const events::SignalEven
     
     if (spendingPower*allowablePosition <= 0.0 || scaledQty <= 0 ) return; 
 
+    std::cout << "BUY SIGNAL : Qty : " << descaleQty(scaledQty) << " Stop Price : " << stopPrice << " Stop Dist : " << stopDist << " ATR : " << atr << "\n";
+
     // --- Schedule a stop loss ( This is for backtesting only )
     std::optional<stopData> stop=stopData{
         event.epoch,
         trd::Side::Buy,
         stopPrice,
-        scaledQty,
+        static_cast<trd::quantity>(scaledQty*exitPct),
         stopDist
     };
 
