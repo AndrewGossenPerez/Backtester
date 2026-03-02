@@ -57,8 +57,6 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
         // Historical backtest
         for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
 
-            if (m_portfolio.balance <= 0.0) break;
-
             if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
             marketState.current = bars[i];
             marketState.next = bars[i + 1];

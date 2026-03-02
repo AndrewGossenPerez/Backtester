@@ -1,7 +1,6 @@
 // excecution_handler.hpp, created by Andrew Gossen.
-// ------
+
 // Applies slippage and fees before filling an order to simulate a real market 
-// ------
 
 #pragma once
 #include "backtesting/excecution.hpp"
@@ -28,11 +27,12 @@ class ExcecutionHandler {
 
         //std::cout << "Excecution handler request for qty :" << descaleQty(event.qty) << " Real @ " << descaleQty(event.qty)*cost << "\n";
         
-        if ((event.side==trd::Side::Buy && m_portfolio.balance<cost) || event.qty<=0){
-            return;
-        }
+        if (event.qty <= 0) return;
 
-        // Leverage checks  done in portfolio 
+        const double buyQty = descaleQty(event.qty);
+        const double curPos = descaleQty(m_portfolio.pos); // negative position implies a short
+
+        // Leverage checks done in portfolio 
         
         m_dispatcher.schedule(events::FillEvent{event.epoch,event.side,event.qty,px,fee,event.stop });
 

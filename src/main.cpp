@@ -24,5 +24,4 @@ int main() {
     addBar(bars,30); // Load the past 24 bars to fill the lookback windows 
     bt.run(bars,strat,true);
 
-
 }

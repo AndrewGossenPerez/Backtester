@@ -1,8 +1,4 @@
-// risk_handler.hpp
-
-// -----
-// Currently holds only trivial risk layers, extensive ones will be stored in include/risklayers
-// -----
+// risk_handler.hpp, created by Andrew Gossen.
 
 #pragma once
 
@@ -17,10 +13,9 @@
 #include "backtesting/excecution.hpp"
 #include "events/ring_buffer.hpp"
 
-constexpr int atrBars=4; 
+constexpr int atrBars=14;  // ATR(14)
 
-
-struct RiskMetaData{ // Stores the risk for each attempted entry ( Orderbook ) 
+struct RiskMetaData{
     trd::price risk;
     trd::timestamp epoch;
     trd::Side side;
@@ -29,8 +24,7 @@ struct RiskMetaData{ // Stores the risk for each attempted entry ( Orderbook )
 template <typename DispatchT>
 struct RiskData { 
 
-    // The backtest creates one of this struct used for Risk metadata, which is passed onto each 
-    // risk model function 
+    // The backtest creates one of this struct used for risk metadata, which is given to each risk model
     
     RiskData(Portfolio& portfolio, trd::MarketState& marketState,DispatchT& dispatcher)
     : m_portfolio(portfolio), m_marketState(marketState), m_dispatcher(dispatcher) {}
@@ -39,36 +33,31 @@ struct RiskData {
     trd::MarketState& m_marketState;
     DispatchT& m_dispatcher;
 
-    std::optional<double> peakATR;
-
-    // Function pointer to the current risk Model 
+    // -- Function pointer to the current risk Model, swapping allowed
     using riskModel=void (*)(RiskData&,  const events::SignalEvent& event);
     riskModel current=nullptr;
+    // ------
 
     double calculateATR(){
 
-        if (barHistory.size() < atrBars) return 0.0; // Need at least 2 bars
+        if (!barHistory.full()) return 0.0;
 
         double sumTR = 0.0;
-        int N=0;
 
-        for (size_t i = barHistory.size()-1; i!=0; i--) {
+        for (size_t i = 1; i < barHistory.size(); ++i) {
 
             const trd::Bar& curr = barHistory[i];
             const trd::Bar& prev = barHistory[i - 1];
 
-            double highMlow = curr.high - curr.low;
-            double highmPrevClose=curr.high-prev.close;
-            double lowMPrevClose=curr.low-prev.close;
-            double TR = std::max({std::abs(highMlow), std::abs(highmPrevClose), std::abs(lowMPrevClose)});
-          //  std::cout << "TR for bar " << curr.epoch << " : " << TR << "\n\n";
+            double tr1 = curr.high - curr.low;
+            double tr2 = std::abs(curr.high - prev.close);
+            double tr3 = std::abs(curr.low  - prev.close);
 
+            double TR = std::max({tr1, tr2, tr3});
             sumTR += TR;
-            N++;
-
         }
 
-        return sumTR/N;
+        return sumTR / atrBars;
 
     }
 
@@ -77,60 +66,50 @@ struct RiskData {
         barHistory.overwrite(current);
     }
 
-    void on(const events::FillEvent& ev){ 
-
-        int neg=1;
-        if (ev.side==trd::Side::Sell) neg=-1;
-
-        for (std::size_t i=0;i<riskHistory.size();i++){
-            if (riskHistory[i].epoch==ev.epoch && ev.stop.has_value()) {
-                totalOpenRisk+=neg*descaleQty(ev.qty)*ev.stop.value().trailDist;
-            }
-        }
-
-    }
+    void on(const events::FillEvent& ev){ return; }
 
     bool barCapacity () const { return barHistory.full(); }
-
-    RingBuffer<trd::Bar,atrBars> barHistory;
-    RingBuffer<trd::Bar,5> riskHistory; // Stores last 5 attempted orders, to check if they filled to add to total open 
-    trd::price totalOpenRisk=0;
+    
+    RingBuffer<trd::Bar, atrBars + 1> barHistory;
     
 };
 
 // Risk Functions 
 
+// Will simply follow the signal without any risk management
 template <typename DispatchT>
-void FollowThrough(RiskData<DispatchT>& riskData, const events::SignalEvent& event){
+void FollowThrough(RiskData<DispatchT>& riskData, const events::SignalEvent& event)
+{
+    if (event.side == trd::Side::Hold) return;
 
-    if (event.side!=trd::Side::Hold){
+    if (event.side == trd::Side::Buy) {
         riskData.m_dispatcher.schedule(
-            events::OrderEvent{event.epoch, event.side, QTY_SCALE} // Will only fill when vol >=1 
+            events::OrderEvent{event.epoch, event.side, QTY_SCALE}
         );
+        return;
     }
 
-}
+    const trd::price px = riskData.m_marketState.current.close;
+    if (px <= 0.0) return;
 
-template <typename DispatchT>
-void TrivialRisk(RiskData<DispatchT>& riskData, const events::SignalEvent& event){
+    const double equity = static_cast<double>(riskData.m_portfolio.equity(px));
+    if (equity <= 0.0) return;
 
-    trd::Side side;
-    trd::quantity qty;
+    constexpr double MAX_LEVERAGE = 2.0;
 
-    switch (event.side){
-        case trd::Side::Sell: 
-         side=trd::Side::Sell;
-         qty=riskData.m_portfolio.pos;
-         break;
-        case trd::Side::Buy:
-         side=trd::Side::Buy;
-         qty=QTY_SCALE; // Buys one asset 
-         break;
-        default: return;
+    const double maxAbsShares = (equity * MAX_LEVERAGE) / static_cast<double>(px);
+    const long long maxAbsUnits = static_cast<long long>(std::floor(maxAbsShares));
+
+    const long long minAllowedShares = -(maxAbsUnits - 1);
+
+    const long long curShares = static_cast<long long>(descaleQty(riskData.m_portfolio.pos));
+
+    if (curShares - 1 < minAllowedShares) {
+        return; 
     }
 
     riskData.m_dispatcher.schedule(
-        events::OrderEvent{event.epoch, side, qty}
+        events::OrderEvent{event.epoch, event.side, int(0.3*QTY_SCALE)}
     );
 
 }

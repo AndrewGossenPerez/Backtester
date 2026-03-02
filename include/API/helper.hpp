@@ -1,9 +1,7 @@
 // helper.hpp, created by Andrew Gossen.
 
-// -----
 // Utility functions for GET and POSTs to the Alpaca API for paper testing 
 //  Implementations in src/helper.cpp
-// ------ 
 
 #pragma once
 #include <string>

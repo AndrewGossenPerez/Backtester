@@ -1,10 +1,8 @@
 // dispatcher.hpp, created by Andrew Gossen.
 
-// ----
-// 
 // This is the core dispatch system for the backtesting engine
-// Holds a dispatch class, which owns the central event queue using a fixed-capacity
-// ringbuffer, and dispatches events to the appropraite handler function (in the pipeline folder)
+// Holds a dispatch class, which owns the central event queue using a ring buffer 
+// It will dispatch events to the appropraite handler function (in the pipeline folder)
 
 // Used to store events in a ring-buffer for later dispatching. Events are dispatched in this order : 
     // HANDLER FUNCTION | EVENT TAKEN -> EVENT GIVEN 
@@ -12,8 +10,6 @@
     // RiskHandler - ( SignalEvent -> OrderEvent )
     // ExcecutionHandler - (OrderEvent -> FillEvent )
     // PortfolioHandler - ( FillEvent -> Final action ) 
-
-// --- 
 
 #pragma once 
 #include <vector>
@@ -38,6 +34,7 @@
 
 // Risk layers 
 #include "risklayers/fixed_fractional_simple.hpp"
+#include "risklayers/volatility_scale.hpp"
 
 namespace events{
 
@@ -55,8 +52,8 @@ class Dispatcher{
     m_handlerStop(*this,portfolio,marketState)
     {
         // Set the risk handler
-       //m_handlerRisk.current=FixedFractionalRisk<Dispatcher>;
-        m_handlerRisk.current=FollowThrough;
+        m_handlerRisk.current=VolatilityScaleStop<Dispatcher>;
+        //m_handlerRisk.current=FollowThrough;
 
     }
 

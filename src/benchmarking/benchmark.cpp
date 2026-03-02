@@ -1,10 +1,8 @@
 
 // benchmark.hpp, created by Andrew Gossen.
 
-// -----
 // Benchmark harness for the trading engine
 // Used to measure CSV ingestion throughput and backtesting performance
-// -----
 
 #include "data/csv_reader.hpp"
 #include "backtesting/strategies.hpp"

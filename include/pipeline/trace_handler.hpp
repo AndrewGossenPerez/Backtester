@@ -1,9 +1,8 @@
 // trace_handler.hpp, created by Andrew Gossen.
 
-// ----
+// 
 // This is not currently in use, but is useful for debugging
 // Will print the current event and it's attributes (Obviously expensive and not used in the actual backtest)
-// ---- 
 
 #pragma once
 #include <iostream>

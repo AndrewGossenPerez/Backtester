@@ -1,8 +1,6 @@
 // events.hpp, created by Andrew Gossen.
 
-// ----
-// Establishes each event's metadats struct 
-// ---- 
+// Establishes the core event structs 
 
 #pragma once
 #include <variant>
@@ -11,12 +9,12 @@
 #include "core/types.hpp"
 #include "data/bar.hpp"
 
-struct stopData{
-    trd::timestamp epoch;
-    trd::Side side;
-    trd::price stopPrice;
-    trd::quantity qty;
-    double trailDist;
+// Single-stop data 
+struct stopData {
+    bool active{false};
+    trd::Side side;       
+    double stopPrice{0.0};
+    trd::quantity qty{0};     
 };
 
 namespace events {

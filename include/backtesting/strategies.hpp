@@ -1,10 +1,7 @@
 // strategies.hpp, created by Andrew Gossen.
 
-// ----
-// This is the header to create new strategies 
 // Each strategy is derived from 'Strategy' which holds an onBar function
-// which is exceuted on each bar in the bars vector to decide whether to buy/sell/hold 
-// ---- 
+// which is called for each new bar 
 
 #pragma once 
 #include "core/types.hpp"

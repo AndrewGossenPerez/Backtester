@@ -1,8 +1,6 @@
 // bar.hpp, created by Andrew Gossen.
 
-// ----
 // Stores bar metadata 
-// ----
 
 #pragma once 
 #include "core/types.hpp"

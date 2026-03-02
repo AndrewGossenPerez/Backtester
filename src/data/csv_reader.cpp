@@ -1,15 +1,15 @@
 // csv_reader.cpp, created by Andrew Gossen Andrew Gossen
-//
+
 // Implementation of csv_reader.hpp loadBar() function
 // Loads OHLCV bar data from CSV into a vector<trd::Bar>
-//
-// Design:
+
+// This is the current design:
 // - Reads the entire file into a contiguous std::string buffer
 // - Parses in-place using pointer arithmetic (no per-field allocations)
-// -- Can now work on YY:MM:DD, YY:MM:DD HH:MM:SS, and timezone formats (though ignored)
-//
+// - Can now work on YY:MM:DD, YY:MM:DD HH:MM:SS, and timezone formats (though ignored)
+
 // Notes:
-// - Assumes a header row is present and skips the first line
+// It is assumed a header row is present and skips the first line
 
 #include "data/csv_reader.hpp"
 #include <iostream> 
@@ -41,8 +41,14 @@ static std::string readFile(const std::string& file){
 
 // --- Utility helpers
 
+void trd::printBar(const Bar& bar){
+    std::cout << "Bar - Epoch : " << bar.epoch
+    << " Open : " <<bar.open << " High : " <<bar.high << " Low : " <<bar.low << " Close :"<<bar.close
+    <<" Volume : " << bar.volume << std::endl;
+}
+
 static int64_t daysFromEpoch(unsigned y, unsigned m, unsigned d) {
-    // Trasnform YY-MM-DD into an epoch 
+    // Transsforms YY-MM-DD into an epoch 
     y -= (m <= 2);
     const int era = (y >= 0 ? y : y - 399) / 400;
     const unsigned yoe = static_cast<unsigned>(y - era * 400);   
@@ -127,10 +133,8 @@ static bool parseQuantity(const char*& p, const char* end,std::int64_t scale, st
         }
     }
 
-    // Field delimiter
     if (p < end && *p == ',') ++p;
 
-    // Combine with overflow check, v = ip* scale + fp
     if (ip > (std::numeric_limits<std::int64_t>::max() - fp) / scale) return false;
     out = ip * scale + fp;
     return true;
@@ -166,7 +170,7 @@ static bool parseTimestampField(const char*& p, const char* end, trd::timestamp&
         p += 8;
     }
 
-    // Optional fractional seconds
+    // Optionally present fractional seconds
     int64_t frac = 0;
     if (p < end && *p == '.') {
         ++p;
@@ -192,7 +196,7 @@ static bool parseTimestampField(const char*& p, const char* end, trd::timestamp&
 
 }
 
-// -- Defined method functions
+// -- Methods
 
 std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
 
@@ -232,8 +236,3 @@ std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
 
 };
 
-void trd::printBar(const Bar& bar){
-    std::cout << "Bar - Epoch : " << bar.epoch
-    << " Open : " <<bar.open << " High : " <<bar.high << " Low : " <<bar.low << " Close :"<<bar.close
-    <<" Volume : " << bar.volume << std::endl;
-}

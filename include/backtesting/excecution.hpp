@@ -1,10 +1,8 @@
 // excecution.hpp, created by Andrew Gossen.
 
-// ----
 // Holds utility functions to be used the excecution_handler.hpp in the pipeline
 // Allows for slippage calculation (Simulate the buy/sell price being different at time of 
-// order excecution, causing pure loss for this simulation )
-// ---- 
+// order excecution, causing pure loss for this simulation 
 
 #pragma once
 #include "core/types.hpp"

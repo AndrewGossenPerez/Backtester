@@ -1,12 +1,10 @@
 // backtesting.hpp, created by Andrew Gossen.
 
-// ----
 // Holds the TradeLog metadata, stored to m_trades in the report handler 
 // Holds EquityPoint metadata, stored to m_equityCurve in the report handler 
 // Holds Trade metadata, used for the FillEvent 
 // Holds Result metadata, allowing whatever ran the backtest to access it's results in a single manifold 
 // Holds the backtest class of which a program will construct and run '.run()' to backtest
-// ---- 
 
 #pragma once 
 #include <cstdint>

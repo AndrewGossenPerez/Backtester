@@ -12,9 +12,7 @@
 #include "backtesting/strategies.hpp"
 #include "events/events.hpp"
 
-// --- CONFIG -------
-double minCrossover=1.0; // FastEma must be > minCrossOver * slowEma to trigger a buy, and vice versa for sell
-// ------------------
+// Early stage implementation of an EMA Signaller, will signal a buy/sell upon a change in crossover
 
 template <std::size_t NFast, std::size_t NSlow>
 class SmoothEMA : public Strategy {
@@ -41,20 +39,16 @@ class SmoothEMA : public Strategy {
         return isFast ? m_fastHistory : m_slowHistory;
     }
 
-    std::vector<trd::Side>& getSignalHistory() {
-        return m_signalHistory;
-    }
-
    private:
 
     bool m_thresholdEnabled;
     double m_pThresh;
     float m_alphaFast;
     float m_alphaSlow;
+    trd::Side prevSignal{trd::Side::Hold}; // Won't prevent a buy/sell on first bar 
 
     std::vector<trd::price> m_fastHistory;
     std::vector<trd::price> m_slowHistory;
-    std::vector<trd::Side> m_signalHistory;
 
     double m_fastEMA = 0.0f;
     double m_slowEMA = 0.0f;
@@ -62,7 +56,9 @@ class SmoothEMA : public Strategy {
     trd::Side currentSignal{trd::Side::Hold};
     double currentMarketChange{0.0};
 
-    void onFill(const events::FillEvent&) override { return; }
+    void onFill(const events::FillEvent&) override { 
+        return;
+    }
 
     void onMarketData(const events::MarketEvent& m) override {
         float price = m.bar.close;
@@ -81,15 +77,17 @@ class SmoothEMA : public Strategy {
         if (m_thresholdEnabled && std::abs(currentMarketChange) < m_pThresh) {
             currentSignal = trd::Side::Hold;
         } else {
-            // --- Trend logic based on EMA crossover 
-            if (m_fastEMA > m_slowEMA) { 
+
+            if (m_fastEMA > m_slowEMA && prevSignal != trd::Side::Buy ) { 
                 currentSignal = trd::Side::Buy;
-            } else if (m_fastEMA < m_slowEMA) {
+            } else if (m_fastEMA < m_slowEMA && prevSignal != trd::Side::Sell) {
                 currentSignal = trd::Side::Sell;
             } else { currentSignal = trd::Side::Hold; } 
+
+            if (currentSignal!=trd::Side::Hold) prevSignal=currentSignal;
+
         }
 
-        m_signalHistory.push_back(currentSignal);
     }
 
 };  

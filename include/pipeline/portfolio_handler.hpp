@@ -1,9 +1,7 @@
 // portfolio_handler.hpp, created by Andrew Gossen.
 
-// ----
 // The portfolio handler takes in a FillEvent from the excecution handler 
 // Will excecute the requested buy/sell, updating the portfolio's balance,position, and equity
-// ----  
 
 #pragma once 
 #include "core/portfolio.hpp"

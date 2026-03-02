@@ -1,8 +1,7 @@
 // ring_buffer.hpp, created by Andrew Gossen.
 
-// ----
 // This is a custom fixed capacity ring buffer
-// ---- 
+// Used for the event queue, ATR bars, and lookback windwos
 
 #pragma once 
 #include <cstddef>

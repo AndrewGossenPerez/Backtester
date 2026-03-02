@@ -1,9 +1,8 @@
 // portfolio.hpp, created by Andrew Gossen.
 
-// ----
 // Notes:
 // For buy/sell, the quantity is assumed to be already scaled to QTY_SCALE
-// ---- 
+
 #pragma once
 #include "core/types.hpp"
 #include "data/config.hpp"
@@ -46,7 +45,7 @@ class LivePortfolio : public Portfolio {
 
     ~LivePortfolio()=default;
 
-    std::string symbol{"AAPL"};  // default symbol
+    std::string symbol{"AAPL"}; // What to trade on Alpaca 
 
     LivePortfolio(const std::string& sym = "AAPL") : symbol(sym) {
         syncLive();
@@ -59,13 +58,11 @@ class LivePortfolio : public Portfolio {
             balance = std::stod(account["cash"].get<std::string>());
 
             try {
-
-                auto position = httpGet("https://paper-api.alpaca.markets/v2/positions/" + symbol);
                 // Alpaca returns numeric values as strings in JSON
+                auto position = httpGet("https://paper-api.alpaca.markets/v2/positions/" + symbol);
                 pos = static_cast<trd::quantity>( std::stod(position["qty"].get<std::string>()) * QTY_SCALE);
-
             } catch (...) {
-                // no position, assume 0
+                // If no position exists for this symbol treat it as 0
                 pos = 0;
             }
 
@@ -115,78 +112,147 @@ class BacktestPortfolio : public Portfolio {
 
     BacktestPortfolio(){ m_tracks.reserve(1000); }
 
-    // Member functions 
+    // Simple leverage cap for both long & short 
+    static constexpr double MAX_LEVERAGE = 2.0; // 2x notional vs equity
+
     void buy(trd::quantity qtyScaled, trd::price px, trd::price fee) {
 
-        //std::cout << "Filling now for qty : " << descaleQty(qtyScaled) << " At price @ " << px*descaleQty(qtyScaled)+fee << "!\n";
+        if (qtyScaled <= 0) return;
 
-        auto qty=descaleQty(qtyScaled);
-        auto cost = px*qty+fee;
-        if (cost>balance || qtyScaled<=0) return; // Leverage and sanity check 
+        // Spend cash on buy
+        const double qty = descaleQty(qtyScaled);
+        const double cost = px * qty + fee;
 
-        balance-=cost;
-        pos+=qtyScaled;
+        // Tentative new state
+        trd::quantity newPos = pos + qtyScaled;
+        double newBalance = balance - cost;
 
-        m_tracks.push_back(Track{px, qtyScaled});
+        // Simple leverage check using mark at fill px
+        const double newEquity = newBalance + descaleQty(newPos) * px;
+        const double newNotional = std::abs(descaleQty(newPos) * px);
+        if (newEquity <= 0.0) return;
+        if (newNotional > newEquity * MAX_LEVERAGE) return;
 
-        //std::cout << " Fill complete \n";
+        // Apply
+        balance = newBalance;
+        pos = newPos;
+
+        // buy closes shorts first, then opens long
+        trd::quantity remaining = qtyScaled;
+
+        // Cover shorts (lots with qty < 0)
+
+        for (auto& lot : m_tracks) {
+
+            if (remaining <= 0) break;
+            if (lot.qty >= 0) continue;
+
+            // lot.qty is negative (short). Buying reduces its magnitude toward 0.
+            trd::quantity coverQty = std::min<trd::quantity>(remaining, static_cast<trd::quantity>(-lot.qty));
+            lot.qty += coverQty;  
+            remaining -= coverQty;
+
+        }
+
+        // Remove exhausted lots
+        m_tracks.erase(
+            std::remove_if(m_tracks.begin(), m_tracks.end(),[](const Track& t){ return t.qty == 0; }),
+            m_tracks.end()
+        );
+
+        // Any leftover becomes a new long lot
+        if (remaining > 0) {
+            m_tracks.push_back(Track{px, remaining});
+        }
 
     }
 
     void sell(trd::quantity qtyScaled, trd::price px, trd::price fee) {
 
-        if (qtyScaled>pos) return; // Leverage and sanity check 
+        if (qtyScaled <= 0) return;
 
-        auto qty=descaleQty(qtyScaled);
-        auto gain = px*qty-fee;
-        balance+=gain;
-        pos-=qtyScaled;
+        // Receive cash on sell
+        const double qty = descaleQty(qtyScaled);
+        const double gain = px * qty - fee;
 
+        // Tentative new state
+        trd::quantity newPos = pos - qtyScaled;
+        double newBalance = balance + gain;
+
+        // Simple leverage check using mark at fill px
+        const double newEquity = newBalance + descaleQty(newPos) * px;
+        const double newNotional = std::abs(descaleQty(newPos) * px);
+        if (newEquity <= 0.0) return;
+        if (newNotional > newEquity * MAX_LEVERAGE) return;
+
+        // Apply
+        balance = newBalance;
+        pos = newPos;
+
+        // sell closes longs first, then opens short
         trd::quantity remaining = qtyScaled;
 
+        // Close longs
         for (auto& lot : m_tracks) {
-            if (remaining <= 0.0) break;
 
-            double closeQty = std::min(lot.qty, qtyScaled);
+            if (remaining <= 0) break;
+            if (lot.qty <= 0) continue;
+
+            trd::quantity closeQty = std::min<trd::quantity>(remaining, lot.qty);
             lot.qty -= closeQty;
             remaining -= closeQty;
+
         }
 
-        // Remove exhausted lots
+        // Remove exhaustedlots
         m_tracks.erase(
-            std::remove_if(
-                m_tracks.begin(), m_tracks.end(),
-                [](const Track& t) { return t.qty <= 0.0; }
-            ),
+            std::remove_if(m_tracks.begin(), m_tracks.end(),[](const Track& t){ return t.qty == 0; }),
             m_tracks.end()
         );
-    
+
+        // Any leftover becomes a new short lot
+        if (remaining > 0) {
+            m_tracks.push_back(Track{px, static_cast<trd::quantity>(-remaining)}); // negative
+        }
     }
 
     trd::price avgPrice() const {
 
         if (m_tracks.empty()) return 0.0;
 
+        // Average entry price of the current net position direction.
+        // If pos > 0 average long lots
+        // If pos < 0 average short lots (returned as positive price)
+        if (pos == 0) return 0.0;
+
         double weighted = 0.0;
         double totalQty = 0.0;
 
-        for (const auto& track : m_tracks) {
-            double realQty=descaleQty(track.qty);
-            weighted += track.px * realQty;
-            totalQty += realQty;
+        if (pos > 0) {
+            for (const auto& track : m_tracks) {
+                if (track.qty <= 0) continue;
+                const double q = descaleQty(track.qty);
+                weighted += track.px * q;
+                totalQty += q;
+            }
+        } else { // pos < 0
+            for (const auto& track : m_tracks) {
+                if (track.qty >= 0) continue;
+                const double q = descaleQty(static_cast<trd::quantity>(-track.qty)); // abs
+                weighted += track.px * q;
+                totalQty += q;
+            }
         }
 
-        return (totalQty > 0.0) ? weighted / totalQty : 0.0;
-
+        return (totalQty > 0.0) ? (weighted / totalQty) : 0.0;
     }
 
-
-    void setBalance(trd::price e) { 
+    void setBalance(trd::price e) {
         balance = e;
     }
 
     private:
+
     std::vector<Track> m_tracks;
-
+    
 };
-

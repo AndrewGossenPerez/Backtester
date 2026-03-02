@@ -1,70 +1,89 @@
 // stop_manager.hpp, created by Andrew Gossen
 
-// ----- 
-// Closes open positions if a stop price is hit, normally would be done by Alpaca apis this is only for backtesting accuracy
-// -----
-
 #pragma once
 #include <optional>
+#include <iostream>
 #include "data/market_state.hpp"
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 
+// Currently only one stop loss is active at a time 
 
 template <typename DispatchT>
 class StopHandler {
-    
+
     public:
 
-    StopHandler(DispatchT& dispatcher, Portfolio& portfolio,trd::MarketState& marketState)
-    : m_dispatcher(dispatcher),m_portfolio(portfolio), m_marketState(marketState) {}
+    StopHandler(DispatchT& dispatcher, Portfolio& portfolio, trd::MarketState& marketState)
+        : m_dispatcher(dispatcher), m_portfolio(portfolio), m_marketState(marketState) {}
 
-    void on(const events::FillEvent& ev){
+    // Whenever we get a fill that contains a stop, we overwrite the single active stop
+    void on(const events::FillEvent& ev) {
+        if (!ev.stop.has_value()) return;
 
-        //if (ev.side==trd::Side::Buy) std::cout << " BOUGHT FOR QTY: " << descaleQty(ev.qty) << " PX : " << ev.px << " EPOCH: " << ev.epoch << "\n";
-        if (ev.stop.has_value() && ev.side==trd::Side::Buy){
-            m_stops.push_back(std::move(ev.stop.value()));
-        }
+        stopData s = ev.stop.value();
+        s.active = true;
 
+        m_stops.overwrite(s); // Overwrites current stop loss data 
     }
 
-    void on(const events::MarketEvent){ // Long only implementation
+    void on(const events::MarketEvent& /*ev*/) {
+        const trd::Bar& current = m_marketState.current;
 
-        const trd::Bar &current=m_marketState.current;
+        if (m_stops.empty()) return;
 
-        // Sell any positions with the stop price hit 
-        
-        for (std::size_t i=0;i<m_stops.size();i++){
+        // Only one stop exists (latest)
+        stopData& s = m_stops.back();
+        if (!s.active) return;
 
-            // Stop hit at this point 
-            if (current.low <= m_stops[i].stopPrice) {
+        // Long stop, stop triggers on low <= stopPrice
+        if (s.side == trd::Side::Buy && current.low <= s.stopPrice) {
 
-                std::cout << "Sell";
+            std::cout << "Stop hit for BUY at epoch " << current.epoch
+                      << " stop price : " << s.stopPrice
+                      << " current low : " << current.low << "\n";
 
-                m_dispatcher.schedule(
-                    events::OrderEvent{
-                        m_stops[i].epoch,
-                        trd::Side::Sell,
-                        m_stops[i].qty
-                    }
-                );
+            // Deactivate immediately so it cannot fire again this bar
+            s.active = false;
 
-                m_stops.erase(m_stops.begin() + i);
-                std::cout << "P9p";
+            m_dispatcher.schedule(
+                events::OrderEvent{
+                    current.epoch,
+                    trd::Side::Sell,
+                    s.qty
+                }
+            );
 
-                continue; 
-
-            }
-
+            return;
         }
-    
+
+        // Short stop, stop triggers on high >= stopPrice 
+        if (s.side == trd::Side::Sell && current.high >= s.stopPrice) {
+
+            std::cout << " Short stop triggered at epoch " << current.epoch
+                      << " stop price : " << s.stopPrice
+                      << " current high : " << current.high << "\n";
+
+            // Deactivate immediately so it cannot fire again this bar
+            s.active = false;
+
+            m_dispatcher.schedule(
+                events::OrderEvent{
+                    current.epoch,
+                    trd::Side::Buy,
+                    s.qty
+                }
+            );
+
+            return;
+        }
     }
 
-    private:
+   private:
 
     DispatchT& m_dispatcher;
     Portfolio& m_portfolio;
     trd::MarketState& m_marketState;
-    std::vector<stopData> m_stops;
+    RingBuffer<stopData, 1> m_stops; 
 
 };

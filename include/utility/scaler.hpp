@@ -1,9 +1,7 @@
 
 // scaler.hpp, created by Andrew Gossen
 
-// ----
 // Holds utility functions to descale QTY
-// ---- 
 
 #pragma once 
 #include "core/types.hpp"
