@@ -22,9 +22,12 @@ struct RiskMetaData{
 };
 
 template <typename DispatchT>
-struct RiskData { 
+class RiskData { 
 
-    // The backtest creates one of this struct used for risk metadata, which is given to each risk model
+    // The backtest creates one of this struct used for risk metadata, which is given to each risk model via the dispatcher 
+    // Stored as a private member of the Dispatch class 
+
+    public:
     
     RiskData(Portfolio& portfolio, trd::MarketState& marketState,DispatchT& dispatcher)
     : m_portfolio(portfolio), m_marketState(marketState), m_dispatcher(dispatcher) {}
@@ -63,14 +66,23 @@ struct RiskData {
 
     void on(const events::MarketEvent& ev){
         trd::Bar current=ev.bar;
-        barHistory.overwrite(current);
+        barHistory.overwrite(current); // Add the current bar to the history for ATR calculation
+
+        // Store current ATR for plotting 
+        getATRs().push_back(calculateATR());
     }
 
     void on(const events::FillEvent& ev){ return; }
 
     bool barCapacity () const { return barHistory.full(); }
+
+    std::vector<trd::price>& getATRs() {return m_atrs;}
     
     RingBuffer<trd::Bar, atrBars + 1> barHistory;
+
+    private: 
+
+    std::vector<trd::price> m_atrs;
     
 };
 

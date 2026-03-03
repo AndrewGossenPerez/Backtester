@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter, ScalarFormatter
 from matplotlib.widgets import Button
 
-def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_SCALE=1, nmax=10_000_000):
-    
+
+def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trades=None, TIME_SCALE=1, nmax=10_000_000):  
+
     trend_padding=(equity/30)
 
     step = max(1, len(epoch) // nmax)
@@ -21,8 +22,10 @@ def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_
     ax_equity = fig.add_subplot(gs[1], sharex=ax_stock)
     ax_pos = fig.add_subplot(gs[2], sharex=ax_stock)
 
+    #Stock price 
     ax_stock.plot(x[::step], stock[::step], label="Stock", color="#9467bd")
 
+    # Trend Lines 
     if fastN is not None and len(fastN) > 0:
         fast_full = np.full(len(stock), np.nan)
         fast_full[-len(fastN):] = fastN
@@ -33,7 +36,7 @@ def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_
         slow_full[-len(slowN):] = slowN
         ax_stock.plot(x, slow_full-trend_padding, label="Slow Lookback", color="#d62728")
 
-    # --- Buy/sell markers
+    # Buy/sell markers
     buy_scatter = None
     sell_scatter = None
 
@@ -59,7 +62,53 @@ def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_
     ax_stock.set_title("Backtest results")
     ax_stock.set_ylabel("Price ($)")
     ax_stock.grid(True, alpha=0.3)
-    # legend moved outside so it doesn't overlap data
+
+
+    # ATR on its own y-axis to preserve shape
+    ax_atr = ax_stock.twinx()
+    ax_atr.set_zorder(ax_stock.get_zorder() - 1)   # keep price on top
+    ax_atr.patch.set_alpha(0.0)                    # transparent background
+
+    # ATR amplified relative to stock 
+    atr_line = None
+
+        # --- ATR amplified relative to stock volatility
+    if atrs is not None and len(atrs) > 0:
+        atrs = np.asarray(atrs, dtype=np.float64)
+        atr_full = np.full(len(stock), np.nan)
+        atr_full[-len(atrs):] = atrs
+
+        valid = np.isfinite(stock) & np.isfinite(atr_full)
+        if np.any(valid):
+
+            # Use std dev instead of total range (better scaling)
+            stock_vol = np.nanstd(stock[valid])
+            atr_vol   = np.nanstd(atr_full[valid])
+            atr_vol = atr_vol if atr_vol > 0 else 1.0
+
+            amp = (stock_vol / atr_vol) * 0.1
+
+            atr_scaled = atr_full * amp
+
+            # Keep it slightly above stock everywhere
+            gap = stock_vol * 0.2
+            shift = np.nanmax(stock[valid] - atr_scaled[valid]) + gap
+
+            atr_line, = ax_stock.plot(
+                x,
+                atr_scaled + shift,
+                label=f"ATR (scaled x{amp:.2f})",
+                color="#f39c12",
+                linewidth=2
+            )
+
+    ax_atr.set_yticks([])
+    ax_atr.spines["right"].set_alpha(0.2)
+
+    ax_atr.set_ylabel("ATR")
+    ax_atr.grid(True, alpha=0.3)
+
+    # Legend panel
     ax_stock.legend(loc="upper left", bbox_to_anchor=(1.01, 1))
 
     #Equity  
@@ -85,7 +134,7 @@ def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_
         f"Max DD: {max_dd*100:.2f}%"
     )
 
-    # stats moved outside so it doesn't overlap data
+    # Stats moved outside so it doesn't overlap data
     ax_equity.text(
         1.01, 0.95,
         stats,
@@ -103,16 +152,17 @@ def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_
     ax_pos.grid(True, alpha=0.3)
 
     # Remove duplicates
-    for ax in [ax_equity, ax_pos]:
+    for ax in [ax_equity, ax_pos, ax_atr]:
         handles, labels = ax.get_legend_handles_labels()
         if handles:
             ax.legend()
 
     plt.tight_layout()
-    # make room for right-side legend/stats and bottom button
+
+    # Make room for right-side legend/stats and bottom button
     plt.subplots_adjust(hspace=0.15, right=0.80, bottom=0.12)
 
-    # --- Toggle Button (hide/show buy/sell markers)
+    #Toggle Button (hide/show buy/sell markers)
     ax_button = plt.axes([0.85, 0.02, 0.12, 0.05])
     toggle_button = Button(ax_button, "Show buy/sells")
 
@@ -132,6 +182,24 @@ def plot_all(epoch, stock, equity, pos,fastN=None, slowN=None, trades=None,TIME_
 
         toggle_button.label.set_text("Hide buy/sells" if new_state else "Show buy/sells")
         fig.canvas.draw_idle()
+
+    # ATR Toggle 
+    ax_atr_button = plt.axes([0.85, 0.08, 0.12, 0.05])  # above the buy/sell button
+    atr_button = Button(ax_atr_button, "Hide ATR")
+
+    def toggle_atr(event):
+        if atr_line is None:
+            return
+        new_state = not atr_line.get_visible()
+        atr_line.set_visible(new_state)
+        atr_button.label.set_text("Hide ATR" if new_state else "Show ATR")
+        fig.canvas.draw_idle()
+
+    atr_button.on_clicked(toggle_atr)
+
+    # Prevent garbage collection
+    fig._atr_button = atr_button
+    fig._atr_line = atr_line
 
     toggle_button.on_clicked(toggle_trades)
 
@@ -159,9 +227,9 @@ def main():
     fastN = np.asarray(d.get("fastN", []), dtype=np.float64)
     slowN = np.asarray(d.get("slowN", []), dtype=np.float64)
     trades = d.get("trades", None)
+    atrs = np.asarray(d.get("atrs", []), dtype=np.float64)
 
-    fig = plot_all(epoch, stock, equity, pos,fastN, slowN, trades, TIME_SCALE)
-
+    fig = plot_all(epoch, stock, equity, pos, fastN, slowN, atrs, trades, TIME_SCALE)
     plt.show()
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/NVDA.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/AAPL.csv");
     BacktestPortfolio p;
     p.setBalance(startingEquity);
     std::cout << "Bar size : " << bars.size() << "\n";
@@ -29,7 +29,7 @@ static trd::Result run_backtest(int startingAmount) {
     trd::Backtest bt(p);
 
     //ExponentialMovingAverage<12,26> strat(true,0.0023); 
-    SmoothEMA<12,26> strat(true, 0.002);
+    SmoothEMA<6,12> strat(true, 0.001);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat,false);
@@ -64,6 +64,7 @@ static py::dict result_arrays(const trd::Result& r) {
     const auto& fastN = r.fastN;
     const auto& slowN = r.slowN;
     const auto& stockPrice = r.stockCloses;
+    const auto& atrValues = r.atrs;
 
     const py::ssize_t n = static_cast<py::ssize_t>(pts.size());
 
@@ -71,17 +72,20 @@ static py::dict result_arrays(const trd::Result& r) {
     auto equity = py::array_t<double>(n);
     auto pos = py::array_t<double>(n);
     auto stock = py::array_t<double>(n);
+    auto atrs = py::array_t<double>(n);
 
     auto e = epoch.mutable_unchecked<1>();
     auto q = equity.mutable_unchecked<1>();
     auto p = pos.mutable_unchecked<1>();
     auto s = stock.mutable_unchecked<1>();
+    auto a = atrs.mutable_unchecked<1>();
 
     for (py::ssize_t i = 0; i < pts.size(); ++i) {
         e(i) = static_cast<std::int64_t>(pts[i].epoch);
         q(i) = static_cast<double>(pts[i].equity);
         p(i) = static_cast<double>(pts[i].pos);
         s(i) = static_cast<double>(stockPrice[i]);
+        if (atrValues.has_value()) a(i) = static_cast<double>(atrValues.value()[i]);
     }
 
     py::dict d;
@@ -89,7 +93,9 @@ static py::dict result_arrays(const trd::Result& r) {
     d["equity"] = std::move(equity);
     d["pos"] = std::move(pos);
     d["stock"] = std::move(stock);
+    d["atrs"] = std::move(atrs);
     d["trades"] = tradelogs_to_pylist(trds);
+
 
     // Lookback windows if EMA/SMA was used 
     if (slowN.has_value() && fastN.has_value()) { 

@@ -58,6 +58,8 @@ struct Result{  // Final backtest result metadata
     // Lookback windows if EMA/SMA was used 
     std::optional<std::vector<trd::price>> fastN;
     std::optional<std::vector<trd::price>> slowN;
+    // ATR Values 
+    std::optional<std::vector<trd::price>> atrs;
 
     // Summary fields for the final output 
     trd::price finalEquity{0.0};

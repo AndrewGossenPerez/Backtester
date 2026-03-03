@@ -156,6 +156,7 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
 
     result.equityPoints = dispatcher.getReportHandler().getEquityPoints();
     result.trades = dispatcher.getReportHandler().getTrades();
+    result.atrs = dispatcher.getRiskHandler().getATRs();
 
     return result;
 
