@@ -133,6 +133,8 @@ class BacktestPortfolio : public Portfolio {
         if (newEquity <= 0.0) return;
         if (newNotional > newEquity * MAX_LEVERAGE) return;
 
+        //std::cout << "Buying now for qty : " << descaleQty(qtyScaled) << " At price @ " << px*descaleQty(qtyScaled)+fee << "!\n";
+
         // Apply
         balance = newBalance;
         pos = newPos;
@@ -185,6 +187,7 @@ class BacktestPortfolio : public Portfolio {
         if (newEquity <= 0.0) return;
         if (newNotional > newEquity * MAX_LEVERAGE) return;
 
+       // std::cout << "Selling now for qty : " << descaleQty(qtyScaled) << " At price @ " << px*descaleQty(qtyScaled)-fee << "!\n";
         // Apply
         balance = newBalance;
         pos = newPos;

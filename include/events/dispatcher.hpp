@@ -52,8 +52,8 @@ class Dispatcher{
     m_handlerStop(*this,portfolio,marketState)
     {
         // Set the risk handler
-       // m_handlerRisk.current=VolatilityScaleStop<Dispatcher>;
-        m_handlerRisk.current=FollowThrough;
+        m_handlerRisk.current=VolatilityScaleStop<Dispatcher>;
+        //m_handlerRisk.current=FollowThrough;
 
     }
 
@@ -89,7 +89,6 @@ class Dispatcher{
     // Getters 
     ReportHandler& getReportHandler() { return m_handlerReport; }
     RiskData<Dispatcher>& getRiskHandler() { return m_handlerRisk; } 
-
 
     private: 
 

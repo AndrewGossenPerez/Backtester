@@ -25,6 +25,8 @@ class ReportHandler{
 
     void on(const events::FillEvent& event){ 
 
+        std::cout << "FillEvent received for epoch " << event.epoch << " with qty " << descaleQty(event.qty) << " at price " << event.px <<  "Side " << event.side << "\n";
+
         // Trade was completed, log this trade 
         m_trades.emplace_back( 
             event.epoch,

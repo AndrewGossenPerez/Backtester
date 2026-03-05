@@ -35,15 +35,15 @@ void VolatilityScaleStop(RiskData<DispatchT>& riskData, const events::SignalEven
     std::optional<stopData> stop = stopData{
         true,
         event.side,
-        1000000,
+        0,
         QTY_SCALE
     };
 
+ 
     riskData.m_dispatcher.schedule(events::OrderEvent{
         event.epoch,
         event.side,
-        QTY_SCALE,
-        std::move(stop)
+        1
     });
 
 }

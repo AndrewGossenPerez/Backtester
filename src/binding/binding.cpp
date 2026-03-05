@@ -29,7 +29,7 @@ static trd::Result run_backtest(int startingAmount) {
     trd::Backtest bt(p);
 
     //ExponentialMovingAverage<12,26> strat(true,0.0023); 
-    SmoothEMA<6,12> strat(true, 0.001);
+    SmoothEMA<8,21> strat(true, 0.001);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat,false);
@@ -85,6 +85,7 @@ static py::dict result_arrays(const trd::Result& r) {
         q(i) = static_cast<double>(pts[i].equity);
         p(i) = static_cast<double>(pts[i].pos);
         s(i) = static_cast<double>(stockPrice[i]);
+        std::cout << "Equity point : " << pts[i].equity << "\n";
         if (atrValues.has_value()) a(i) = static_cast<double>(atrValues.value()[i]);
     }
 
@@ -95,7 +96,6 @@ static py::dict result_arrays(const trd::Result& r) {
     d["stock"] = std::move(stock);
     d["atrs"] = std::move(atrs);
     d["trades"] = tradelogs_to_pylist(trds);
-
 
     // Lookback windows if EMA/SMA was used 
     if (slowN.has_value() && fastN.has_value()) { 
