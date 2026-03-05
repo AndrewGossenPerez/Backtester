@@ -24,7 +24,7 @@ struct Strategy{
     virtual ~Strategy()=default;
     virtual Signal onBar(const trd::Bar&)=0; // Pure vxirtual function, 
     virtual void onFill(const events::FillEvent &e)=0;
-    virtual void onMarketData(const events::MarketEvent &m)=0;
+    virtual void onMarketData(const events::MarketEvent &m,double atr)=0;
     // each derieved strategy will define it's own way to interpret bars into signals
 
 };

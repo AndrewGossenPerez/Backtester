@@ -73,7 +73,7 @@ class Dispatcher{
     // Overload 'on' functions to run the appropriate handler 
 
     void on(const events::MarketEvent& ev) { // Ran every bar 
-        m_handlerStrat.on(ev); m_handlerReport.setEquity(); m_handlerStop.on(ev);
+        m_handlerStrat.on(ev,m_handlerRisk.calculateATR()), m_handlerReport.setEquity(); m_handlerStop.on(ev);
         m_handlerRisk.on(ev);
     } 
 

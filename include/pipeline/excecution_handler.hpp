@@ -22,9 +22,9 @@ class ExcecutionHandler {
 
         // Apply slippage and factor in market fee 
         const trd::price px=slip(m_marketState.next.open, event.side); // Calculate price after slippage 
-        const trd::price fee=feeFor(event.qty, px); 
-        const trd::price cost=px*descaleQty(event.qty)+fee;
+        trd::price fee=feeFor(event.qty, px); 
 
+        //const trd::price cost=px*descaleQty(event.qty)+fee;
         //std::cout << "Excecution handler request for qty :" << descaleQty(event.qty) << " Real @ " << descaleQty(event.qty)*cost << "\n";
         
         if (event.qty <= 0) return;
@@ -33,7 +33,6 @@ class ExcecutionHandler {
         const double curPos = descaleQty(m_portfolio.pos); // negative position implies a short
 
         // Leverage checks done in portfolio 
-        
         m_dispatcher.schedule(events::FillEvent{event.epoch,event.side,event.qty,px,fee,event.stop });
 
     }

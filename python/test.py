@@ -12,8 +12,7 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     pos = np.asarray(pos,    dtype=np.float64)
 
     step = max(1, len(epoch) // nmax)
-    x = (epoch - epoch[0]) / (86400.0 * TIME_SCALE)
-
+    x = np.arange(len(epoch), dtype=np.float64) / 78.0
 
     fig = plt.figure(figsize=(12, 6))
 
@@ -21,11 +20,10 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     gs = fig.add_gridspec(
         5, 1,
         height_ratios=[1.7, 1.0, 1.0, 1.2, 1.0],
-        hspace=0.55
+        hspace=0.5
     )
 
     ax_stock = fig.add_subplot(gs[0])
-    ax_ema = fig.add_subplot(gs[1], sharex=ax_stock)
     ax_atr = fig.add_subplot(gs[2], sharex=ax_stock)
     ax_equity = fig.add_subplot(gs[3], sharex=ax_stock)
     ax_pos = fig.add_subplot(gs[4], sharex=ax_stock)
@@ -60,17 +58,15 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
         fastN = np.asarray(fastN, dtype=np.float64)
         fast_full = np.full(len(stock), np.nan)
         fast_full[-len(fastN):] = fastN
-        ax_ema.plot(x, fast_full, label="Fast Lookback", color="#2ca02c")
+        ax_stock.plot(x, fast_full, label="Fast Lookback", color="#2ca02c")
 
     if slowN is not None and len(slowN) > 0:
         slowN = np.asarray(slowN, dtype=np.float64)
         slow_full = np.full(len(stock), np.nan)
         slow_full[-len(slowN):] = slowN
-        ax_ema.plot(x, slow_full, label="Slow Lookback", color="#d62728")
+        ax_stock.plot(x, slow_full, label="Slow Lookback", color="#d62728")
 
-    ax_ema.set_ylabel("EMA")
-    ax_ema.grid(True, alpha=0.3)
-    ax_ema.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
+    ax_stock.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
 
     # ATR
     atr_line = None
@@ -87,7 +83,6 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     # Equity 
 
     step = max(1, epoch.size // nmax)
-    x = (epoch - epoch[0]) / (86400.0 * TIME_SCALE)
 
     ax_equity.plot(x[::step], equity[::step], color="#1f77b4", label="Equity")
     ax_equity.fill_between(x[::step], equity[0], equity[::step], color="#1f77b4", alpha=0.1)
@@ -132,9 +127,6 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     ax_pos.legend(loc="upper left", bbox_to_anchor=(1.01, 0.9))
     ax_pos.yaxis.set_major_formatter(ScalarFormatter(useOffset=True))
 
-    # Hide x tick labels for upper panels
-    for ax in (ax_stock, ax_ema, ax_atr, ax_equity):
-        plt.setp(ax.get_xticklabels(), visible=False)
 
     # room for right-side legends
     plt.subplots_adjust(right=0.80, bottom=0.12)

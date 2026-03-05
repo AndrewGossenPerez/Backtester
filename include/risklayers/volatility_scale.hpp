@@ -7,16 +7,16 @@
 #include <iostream>
 #include <cmath>
 #include <cstdint>
+#include <algorithm>
 
 #include "data/bar.hpp"
 #include "core/portfolio.hpp"
 #include "pipeline/risk_handler.hpp"
 
 // ------- CONFIG -----
-constexpr double ATR_MULT = 2.0; // stop distance = ATR_MULT * ATR
-constexpr double RISK_PCT = 0.01; // risk 1% of equity per trade
-constexpr double MAX_SHARES_CAP = 10.0;
-constexpr double MIN_SHARES_CAP = 1.0;
+constexpr double ATR_MULT = 1.4; // stop distance = ATR_MULT * ATR
+constexpr double RISK_PCT = 0.3; // risk % of equity per trade
+constexpr double MAX_CAPITAL_PCT = 200; // Clamps the maximum amount sold/bought as % of current equity
 // --------------------
 
 // Again, an early implementation of a risk model. 
@@ -30,20 +30,38 @@ void VolatilityScaleStop(RiskData<DispatchT>& riskData, const events::SignalEven
     if (!riskData.barCapacity()) return;
 
     const double atr = riskData.calculateATR();
-    std::cout << "ATR for epoch " << riskData.m_marketState.current.epoch << " is: " << atr << "\n";
 
-    std::optional<stopData> stop = stopData{
+    const trd::price equity = riskData.m_portfolio.equity(riskData.m_marketState.current.close);
+
+    float riskCapital= (equity * (RISK_PCT/100));
+    float volatilityMeasure = (ATR_MULT * atr);
+    float posSize = (riskCapital/volatilityMeasure);
+
+    float stopLoss = (event.side==trd::Side::Sell) ? 
+    (riskData.m_marketState.current.close) + volatilityMeasure : (riskData.m_marketState.current.close) - volatilityMeasure;
+
+    float maxPos = (equity*(MAX_CAPITAL_PCT/100))/(riskData.m_marketState.current.close);
+
+    if (posSize>maxPos) posSize=maxPos;
+
+    std::cout << " -- Volatility sizer -- \n";
+    std::cout << "posSize of : " << posSize << " For the atr : " << atr << "\n" << " At px : " << riskData.m_marketState.current.close << "\n"
+    << " Stop loss of : " << stopLoss << " Equity : " << equity << "\n" << "Sell : " << (event.side==trd::Side::Sell);
+    std::cout << "\n";
+
+    trd::quantity qty = static_cast<trd::quantity>(QTY_SCALE * posSize);
+
+    std::optional<stopData> stop = stopData{ // Update the current stop loss, currently only one stop loss is registered at a time ( and is overwritten per trade ) 
         true,
         event.side,
-        0,
-        QTY_SCALE
+        stopLoss,
+        qty
     };
 
- 
     riskData.m_dispatcher.schedule(events::OrderEvent{
         event.epoch,
         event.side,
-        QTY_SCALE
+        qty
     });
 
 }

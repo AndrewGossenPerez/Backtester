@@ -29,7 +29,7 @@ static trd::Result run_backtest(int startingAmount) {
     trd::Backtest bt(p);
 
     //ExponentialMovingAverage<12,26> strat(true,0.0023); 
-    SmoothEMA<8,21> strat(true, 0.001);
+    SmoothEMA<9,21> strat(true, 0.001);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat,false);
