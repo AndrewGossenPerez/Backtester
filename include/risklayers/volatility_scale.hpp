@@ -43,7 +43,7 @@ void VolatilityScaleStop(RiskData<DispatchT>& riskData, const events::SignalEven
     riskData.m_dispatcher.schedule(events::OrderEvent{
         event.epoch,
         event.side,
-        1
+        QTY_SCALE
     });
 
 }

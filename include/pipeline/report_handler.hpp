@@ -41,6 +41,7 @@ class ReportHandler{
     }
 
     void setEquity(){
+        std::cout << "Equity : " << m_portfolio.equity(m_marketState.current.close) << "\n";
         m_equityCurve.emplace_back( 
             m_marketState.current.epoch,
             m_portfolio.equity(m_marketState.current.close),

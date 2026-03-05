@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter,ScalarFormatter
 from matplotlib.widgets import Button
 
-
 def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trades=None, TIME_SCALE=1, nmax=10_000_000):
 
     epoch = np.asarray(epoch,  dtype=np.float64)
@@ -96,11 +95,11 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     ax_equity.set_ylabel("Equity ($)")
     ax_equity.grid(True, alpha=0.3)
     ax_equity.yaxis.set_major_formatter(FuncFormatter(lambda val, _: f"${val:,.0f}"))
-    ax_equity.legend(loc="upper left")
+    ax_equity.legend(loc="upper left", bbox_to_anchor=(1.0, 1.45))
     
     # Equity stats 
-    print("Ending equity : ") 
-    print(x[400])
+    #print("Ending equity : ") 
+    #print(x[400])
 
     start_eq = float(equity[0])
     final_eq = float(equity[-1])
@@ -118,18 +117,19 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     )
 
     ax_equity.text(
-        1.01, 0.95, stats,
+        1.015, 0.55, stats,
         transform=ax_equity.transAxes,
         va="top", ha="left",
         bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="0.7")
     )
 
     # Pos 
+
     ax_pos.plot(x[::step], pos[::step], label="Position")
     ax_pos.set_ylabel("Position")
     ax_pos.set_xlabel("Days Elapsed")
     ax_pos.grid(True, alpha=0.3)
-    ax_pos.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
+    ax_pos.legend(loc="upper left", bbox_to_anchor=(1.01, 0.9))
     ax_pos.yaxis.set_major_formatter(ScalarFormatter(useOffset=True))
 
     # Hide x tick labels for upper panels

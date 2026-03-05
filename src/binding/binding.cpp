@@ -85,7 +85,7 @@ static py::dict result_arrays(const trd::Result& r) {
         q(i) = static_cast<double>(pts[i].equity);
         p(i) = static_cast<double>(pts[i].pos);
         s(i) = static_cast<double>(stockPrice[i]);
-        std::cout << "Equity point : " << pts[i].equity << "\n";
+       // std::cout << "Equity point : " << pts[i].equity << "\n";
         if (atrValues.has_value()) a(i) = static_cast<double>(atrValues.value()[i]);
     }
 

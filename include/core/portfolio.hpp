@@ -28,6 +28,7 @@ class Portfolio {
     trd::price lastPrice{0.0};
 
     trd::price equity(trd::price markPx = 0.0) const  {
+        std::cout << "Bal : " << balance << " Pos : " << descaleQty(pos) << " Px : " << markPx << "\n";
         return balance + (descaleQty(pos) * (long double)markPx);
     }
 
