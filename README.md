@@ -4,10 +4,9 @@ A build system will be added later. I intend to create a system that allows me t
 
 ---
 
-Naked EMA Signaller w/o risk management (NSlow=8,NFast=21) NVDA
+Example EMA Signaller & Volatility Position Sizer (NSlow=25,NFast=80) AAPL
 
 
-<img width="500" height="250" alt="image" src="https://github.com/user-attachments/assets/7beba6d1-a9ae-4ea6-9746-09eb9a2fdbbc" />
 
 ## Current features 
 - [x] Historical CSV market-data ingestion
