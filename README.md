@@ -9,22 +9,9 @@ Naked EMA Signaller w/o risk management (NSlow=8,NFast=21) NVDA
 
 <img width="500" height="250" alt="image" src="https://github.com/user-attachments/assets/7beba6d1-a9ae-4ea6-9746-09eb9a2fdbbc" />
 
-
-## Current Benchmarks
-
-### Backtesting Engine (100 runs Coinflip strat no risk manager, consumer hardware)
-- **Median throughput:** **2.66M bars/s**  
-- **P90 throughput:** **2.48M bars/s**  
-
-### CSV Ingestion
-- **Throughput:** **5.1M bars/s** (With Epoch given)
-
-*Dataset: ~7.6M-row Bitcoin OHLCV dataset, Coinflip strategy ~ fills every 2nd bar, FF risk layer.*
-
 ## Current features 
 - [x] Modular strategy framework
 - [x] Historical CSV market-data ingestion
 - [x] Event-driven backtesting engine
 - [x] Python interface (WIP)
-- [x] EMA Signaller 
-- [ ] Risk manager (Position sizer using volatility)
+- [ ] Optimisations
