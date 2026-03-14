@@ -16,17 +16,17 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
 
     fig = plt.figure(figsize=(12, 6))
 
-    # Spacing between panels 
+    # Spacing between panels  (FIX: remove unused row that was creating the gap)
     gs = fig.add_gridspec(
-        5, 1,
-        height_ratios=[1.7, 1.0, 1.0, 1.2, 1.0],
+        4, 1,
+        height_ratios=[1.7, 1.0, 1.2, 1.0],
         hspace=0.5
     )
 
-    ax_stock = fig.add_subplot(gs[0])
-    ax_atr = fig.add_subplot(gs[2], sharex=ax_stock)
-    ax_equity = fig.add_subplot(gs[3], sharex=ax_stock)
-    ax_pos = fig.add_subplot(gs[4], sharex=ax_stock)
+    ax_stock  = fig.add_subplot(gs[0])
+    ax_atr    = fig.add_subplot(gs[1], sharex=ax_stock)
+    ax_equity = fig.add_subplot(gs[2], sharex=ax_stock)
+    ax_pos    = fig.add_subplot(gs[3], sharex=ax_stock)
 
     # Stock Panel
     ax_stock.plot(x[::step], stock[::step], label="Stock", color="#9467bd")
@@ -53,20 +53,49 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     ax_stock.grid(True, alpha=0.3)
     ax_stock.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
 
-    # Trend lines 
+    # Trend lines
+    price_span = np.nanmax(stock) - np.nanmin(stock)
+    trend_offset = 0.002 * price_span if np.isfinite(price_span) and price_span > 0 else 0.0
+
+    fast_full = None
+    slow_full = None
+
     if fastN is not None and len(fastN) > 0:
         fastN = np.asarray(fastN, dtype=np.float64)
         fast_full = np.full(len(stock), np.nan)
         fast_full[-len(fastN):] = fastN
+        fast_full = fast_full - trend_offset
         ax_stock.plot(x, fast_full, label="Fast Lookback", color="#2ca02c")
 
     if slowN is not None and len(slowN) > 0:
         slowN = np.asarray(slowN, dtype=np.float64)
         slow_full = np.full(len(stock), np.nan)
         slow_full[-len(slowN):] = slowN
+        slow_full = slow_full - trend_offset
         ax_stock.plot(x, slow_full, label="Slow Lookback", color="#d62728")
 
-    ax_stock.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
+    # Shade between EMAs depending on which is above
+    if fast_full is not None and slow_full is not None:
+        valid = np.isfinite(fast_full) & np.isfinite(slow_full)
+
+        fast_above = valid & (fast_full >= slow_full)
+        slow_above = valid & (slow_full > fast_full)
+
+        ax_stock.fill_between(
+            x, fast_full, slow_full,
+            where=fast_above,
+            interpolate=True,
+            alpha=0.18,
+            color="#2ca02c"
+        )
+
+        ax_stock.fill_between(
+            x, fast_full, slow_full,
+            where=slow_above,
+            interpolate=True,
+            alpha=0.18,
+            color="#d62728"
+        )
 
     # ATR
     atr_line = None
@@ -80,8 +109,7 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     ax_atr.grid(True, alpha=0.3)
     ax_atr.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
 
-    # Equity 
-
+    # Equity
     step = max(1, epoch.size // nmax)
 
     ax_equity.plot(x[::step], equity[::step], color="#1f77b4", label="Equity")
@@ -91,10 +119,6 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
     ax_equity.grid(True, alpha=0.3)
     ax_equity.yaxis.set_major_formatter(FuncFormatter(lambda val, _: f"${val:,.0f}"))
     ax_equity.legend(loc="upper left", bbox_to_anchor=(1.0, 1.45))
-    
-    # Equity stats 
-    #print("Ending equity : ") 
-    #print(x[400])
 
     start_eq = float(equity[0])
     final_eq = float(equity[-1])
@@ -118,15 +142,13 @@ def plot_all(epoch, stock, equity, pos, fastN=None, slowN=None, atrs=None, trade
         bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="0.7")
     )
 
-    # Pos 
-
+    # Pos
     ax_pos.plot(x[::step], pos[::step], label="Position")
     ax_pos.set_ylabel("Position")
     ax_pos.set_xlabel("Days Elapsed")
     ax_pos.grid(True, alpha=0.3)
     ax_pos.legend(loc="upper left", bbox_to_anchor=(1.01, 0.9))
     ax_pos.yaxis.set_major_formatter(ScalarFormatter(useOffset=True))
-
 
     # room for right-side legends
     plt.subplots_adjust(right=0.80, bottom=0.12)

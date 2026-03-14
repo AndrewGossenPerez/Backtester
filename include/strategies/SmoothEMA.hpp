@@ -78,7 +78,7 @@ class SmoothEMA : public Strategy {
             currentSignal = trd::Side::Hold;
         } else {
 
-            if (m_fastEMA > m_slowEMA && prevSignal != trd::Side::Buy ) { 
+            if (m_fastEMA > m_slowEMA && prevSignal != trd::Side::Buy  ) { 
                 currentSignal = trd::Side::Buy;
             } else if (m_fastEMA < m_slowEMA && prevSignal != trd::Side::Sell) {
                 currentSignal = trd::Side::Sell;

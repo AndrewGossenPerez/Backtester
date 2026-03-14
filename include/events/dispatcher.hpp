@@ -35,6 +35,7 @@
 // Risk layers 
 #include "risklayers/fixed_fractional_simple.hpp"
 #include "risklayers/volatility_scale.hpp"
+//#include "risklayers/volatility_scale2.hpp"
 
 namespace events{
 
@@ -52,6 +53,7 @@ class Dispatcher{
     m_handlerStop(*this,portfolio,marketState)
     {
         // Set the risk handler
+        //m_handlerRisk.current=risklayers::volscale2::VolatilityScaleStop<Dispatcher>;
         m_handlerRisk.current=VolatilityScaleStop<Dispatcher>;
         //m_handlerRisk.current=FollowThrough;
 

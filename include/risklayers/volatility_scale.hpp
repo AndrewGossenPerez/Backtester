@@ -14,9 +14,9 @@
 #include "pipeline/risk_handler.hpp"
 
 // ------- CONFIG -----
-constexpr double ATR_MULT = 1.4; // stop distance = ATR_MULT * ATR
-constexpr double RISK_PCT = 0.3; // risk % of equity per trade
-constexpr double MAX_CAPITAL_PCT = 200; // Clamps the maximum amount sold/bought as % of current equity
+inline constexpr double ATR_MULT = 1.4; // stop distance = ATR_MULT * ATR
+inline constexpr double RISK_PCT = 0.3; // risk % of equity per trade
+inline constexpr double MAX_CAPITAL_PCT = 200; // Clamps the maximum amount sold/bought as % of current equity
 // --------------------
 
 // Again, an early implementation of a risk model. 
@@ -61,7 +61,8 @@ void VolatilityScaleStop(RiskData<DispatchT>& riskData, const events::SignalEven
     riskData.m_dispatcher.schedule(events::OrderEvent{
         event.epoch,
         event.side,
-        qty
+        qty,
+        std::move(stop)
     });
 
 }
