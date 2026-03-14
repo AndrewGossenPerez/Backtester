@@ -4,7 +4,7 @@ A build system will be added later. I intend to create a system that allows me t
 
 ---
 
-Example EMA Signaller & Volatility Position Sizer (NSlow=25,NFast=80) AAPL
+Example EMA Signaller & Volatility Position Sizer (NSlow=24,NFast=120) AAPL
 
 
 
