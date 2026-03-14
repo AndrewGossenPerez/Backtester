@@ -1,4 +1,4 @@
-# A backtest engine
+# A handrolled backtest engine
 
 **Work-in-progress backtest engine** featuring a **C++ event-driven backtester** and **CSV market-data ingestion**, with a **Python front-end for visualisation and plotting**.
 
@@ -10,25 +10,17 @@ The goal is to build a flexible research environment for developing, testing, an
 
 **EMA crossover signaller + volatility position sizer** on **AAPL 5-minute bars**
 
-### Parameter Comparison
-
-| **EMA (24 / 120)** | **EMA (16 / 60)** |
-|---|---|
-| <img src="images/AAPL(24,120).png" width="420"><br><sub>A slower, smoother trend-following configuration.</sub> | <img src="images/AAPL(16,60).png" width="420"><br><sub>A faster configuration with more signal sensitivity.</sub> |
-
-| **EMA (30 / 150)** | **EMA (40 / 200)** |
-|---|---|
-| <img src="images/AAPL(30,150).png" width="420"><br><sub>Higher lookbacks for stronger noise filtering.</sub> | <img src="images/AAPL(40,200).png" width="420"><br><sub>A slower configuration focused on multi-session drift.</sub> |
-
----
-
-## Backtest Assumptions
+Additional backtests can be found in the `images/` directory.
 
 > **Transaction cost model:** 1.3 bps slippage, 0.8 bps fee
 
-Additional backtests can be found in the `images/` directory.
+| **EMA (24 / 120)** | **EMA (16 / 60)** |
+|---|---|
+| <img src="images/AAPL(24,120).png" width="420"> | <img src="images/AAPL(16,60).png" width="420"> |
 
----
+| **EMA (30 / 150)** | **EMA (40 / 200)** |
+|---|---|
+| <img src="images/AAPL(30,150).png" width="420"> | <img src="images/AAPL(40,200).png" width="420"> |
 
 ## Current Features
 
