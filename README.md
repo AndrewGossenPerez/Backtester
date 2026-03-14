@@ -6,18 +6,6 @@ The goal is to build a flexible research environment for developing, testing, an
 
 > Build system and additional optimisations are planned.
 
----
-
-## Overview
-
-- **Language:** C++17, Python 3.12.4
-- **Core architecture:** event-driven backtesting engine using ring buffers
-- **Data source:** historical CSV market data from Alpaca's API
-- **Visualisation:** Python + Matplotlib
-- **Use case:** strategy prototyping & performance analysis
-
----
-
 ## Example Strategy
 
 **EMA crossover signaller + volatility position sizer** on **AAPL 5-minute bars**
