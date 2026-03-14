@@ -9,7 +9,7 @@ The goal of this project is to build a flexible research environment for develop
 
 ## Overview
 
-Core components:
+## Core components:
 
 - C++ event-driven backtesting engine
 - Inbuilt Stop Loss system
@@ -17,7 +17,23 @@ Core components:
 - Python visualisation layer
 - Strategy prototyping framework
 
-Backtests currently include **transaction costs**:
+## Event Architecture:
+
+Each market bar propagates through the following event pipeline:
+
+1. **Strategy Handler**  
+   Receives a `MarketEvent` (new bar) and generates a `SignalEvent` (Buy/Sell/Hold).
+
+2. **Risk Handler**  
+   Processes the `SignalEvent` and generates an `OrderEvent` according to the risk model.
+
+3. **Execution Handler**  
+   Simulates market execution and converts the `OrderEvent` into an authoritative `FillEvent`.
+
+4. **Portfolio Handler**  
+   Processes the `FillEvent`, updating portfolio state, positions, and equity.
+
+## Backtests currently include **transaction costs**:
 
 - Slippage: **1.3 bps**
 - Fee: **0.8 bps**
