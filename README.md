@@ -5,9 +5,7 @@ CSV market-data ingestion, and a **Python front-end for visualisation and plotti
 
 The goal of this project is to build a flexible research environment for developing and backtesting trading strategies.
 
----
 
-## Overview
 
 ## Core components:
 
