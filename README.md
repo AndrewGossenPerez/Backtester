@@ -58,6 +58,7 @@ tested on **AAPL 5-minute bars**
 ## Recent Benchmarks
 
 Tested on **consumer hardware**, on a single thread.
+(p50,n=1000) on a 936k AAPL OHLCV dataset
 
 | Component | Throughput |
 |---|---:|
