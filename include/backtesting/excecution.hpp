@@ -14,7 +14,7 @@
 // Apply deterministic slippage to a reference price 
 inline trd::price slip(trd::price px, trd::Side side) {
 
-    trd::price slippage = px * (SLIP_BPS/1000.0);
+    trd::price slippage = px * (SLIP_BPS/10000.0);
 
     switch (side) {
         case trd::Side::Buy:  return px + slippage;

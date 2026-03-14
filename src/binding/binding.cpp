@@ -21,7 +21,7 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/AAPL.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/QQQ.csv");
     BacktestPortfolio p;
     p.setBalance(startingEquity);
     std::cout << "Bar size : " << bars.size() << "\n";
@@ -29,7 +29,7 @@ static trd::Result run_backtest(int startingAmount) {
     trd::Backtest bt(p);
 
     //ExponentialMovingAverage<12,26> strat(true,0.0023); 
-    SmoothEMA<25,80> strat(false, 0.002);
+    SmoothEMA<20,100> strat(false, 0.001);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat,false);
