@@ -60,7 +60,8 @@ class SmoothEMA : public Strategy {
         return;
     }
 
-    void onMarketData(const events::MarketEvent& m, double atr) override {
+    void onMarketData(const events::MarketEvent& m) override {
+
         float price = m.bar.close;
 
         // --- Compute EMA 

@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <iostream>
 
-
 namespace py = pybind11;
 
 static trd::Result run_backtest(int startingAmount) {
@@ -30,7 +29,7 @@ static trd::Result run_backtest(int startingAmount) {
     trd::Backtest bt(p);
 
     //ExponentialMovingAverage<12,26> strat(true,0.0023); 
-    SmoothEMA<30,90> strat(false, 0.0015);
+    SmoothEMA<25,80> strat(false, 0.002);
     //BuyAndHold strat;
 
     trd::Result re=bt.run(bars,strat,false);

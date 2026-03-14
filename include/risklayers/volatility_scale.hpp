@@ -15,7 +15,7 @@
 
 // ------- CONFIG -----
 inline constexpr double ATR_MULT = 1.4; // stop distance = ATR_MULT * ATR
-inline constexpr double RISK_PCT = 0.3; // risk % of equity per trade
+inline constexpr double RISK_PCT = 1.0; // risk % of equity per trade
 inline constexpr double MAX_CAPITAL_PCT = 200; // Clamps the maximum amount sold/bought as % of current equity
 // --------------------
 
@@ -43,11 +43,6 @@ void VolatilityScaleStop(RiskData<DispatchT>& riskData, const events::SignalEven
     float maxPos = (equity*(MAX_CAPITAL_PCT/100))/(riskData.m_marketState.current.close);
 
     if (posSize>maxPos) posSize=maxPos;
-
-    std::cout << " -- Volatility sizer -- \n";
-    std::cout << "posSize of : " << posSize << " For the atr : " << atr << "\n" << " At px : " << riskData.m_marketState.current.close << "\n"
-    << " Stop loss of : " << stopLoss << " Equity : " << equity << "\n" << "Sell : " << (event.side==trd::Side::Sell);
-    std::cout << "\n";
 
     trd::quantity qty = static_cast<trd::quantity>(QTY_SCALE * posSize);
 

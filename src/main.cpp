@@ -12,7 +12,7 @@
 #include <iostream>
 #include <vector>
 
-int main() {
+int live() {
 
     LivePortfolio pf;
 
@@ -23,5 +23,16 @@ int main() {
     std::vector<trd::Bar> bars;
     addBar(bars,30); // Load the past 24 bars to fill the lookback windows 
     bt.run(bars,strat,true);
+
+    return 1;
+
+}
+
+void benchMark();
+
+int main() { 
+
+    //benchMark();
+    return 1;
 
 }

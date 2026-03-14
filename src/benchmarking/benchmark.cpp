@@ -7,7 +7,7 @@
 #include "data/csv_reader.hpp"
 #include "backtesting/strategies.hpp"
 #include "backtesting/backtesting.hpp"
-#include "strategies/EMA.hpp"
+#include "strategies/SmoothEMA.hpp"
 #include "API/helper.hpp"
 
 #include <algorithm>
@@ -28,16 +28,13 @@ void benchMark() {
 
     BacktestPortfolio portfolio;
     portfolio.setBalance(startingEquity);
-
-    ExponentialMovingAverage<10,50> strat(true,0.0005);
-    //BuyAndHold strat;
+    SmoothEMA<30,90> strat(false, 0.0015);
 
     trd::Backtest bt(portfolio);
-    std::vector<trd::Bar> testBars = reader.loadBars("samples/aapl.csv");
+    std::vector<trd::Bar> testBars = reader.loadBars("samples/AAPL.csv");
 
-    // CSV Ingestion
     auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/BTCREC3.csv");
+    std::vector<trd::Bar> mainBars = reader.loadBars("samples/BTC5Min.csv");
     auto t2CSV = clock::now();
 
     std::printf("\n -- BARS LOADED -- \n");
@@ -56,7 +53,7 @@ void benchMark() {
     const double barsProcessed = (mainBars.size() >= 2) ? double(mainBars.size() - 1) : 0.0;
 
     // Measure N backtest Runs 
-    constexpr int N = 1;
+    constexpr int N = 1000;
     std::vector<double> secs;
     std::vector<double> fills;
     secs.reserve(N);

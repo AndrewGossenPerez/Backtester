@@ -72,7 +72,7 @@ class RiskData {
         getATRs().push_back(calculateATR());
     }
 
-    void on(const events::FillEvent& ev){ return; }
+    //void on(const events::FillEvent& ev){ return; }
 
     bool barCapacity () const { return barHistory.full(); }
 
@@ -92,37 +92,8 @@ class RiskData {
 template <typename DispatchT>
 void FollowThrough(RiskData<DispatchT>& riskData, const events::SignalEvent& event)
 {
-    if (event.side == trd::Side::Hold) return;
+    return;
 
-    if (event.side == trd::Side::Buy) {
-        riskData.m_dispatcher.schedule(
-            events::OrderEvent{event.epoch, event.side, QTY_SCALE}
-        );
-        return;
-    }
-
-    const trd::price px = riskData.m_marketState.current.close;
-    if (px <= 0.0) return;
-
-    const double equity = static_cast<double>(riskData.m_portfolio.equity(px));
-    if (equity <= 0.0) return;
-
-    constexpr double MAX_LEVERAGE = 2.0;
-
-    const double maxAbsShares = (equity * MAX_LEVERAGE) / static_cast<double>(px);
-    const long long maxAbsUnits = static_cast<long long>(std::floor(maxAbsShares));
-
-    const long long minAllowedShares = -(maxAbsUnits - 1);
-
-    const long long curShares = static_cast<long long>(descaleQty(riskData.m_portfolio.pos));
-
-    if (curShares - 1 < minAllowedShares) {
-        return; 
-    }
-
-    riskData.m_dispatcher.schedule(
-        events::OrderEvent{event.epoch, event.side, int(0.3*QTY_SCALE)}
-    );
 
 }
 

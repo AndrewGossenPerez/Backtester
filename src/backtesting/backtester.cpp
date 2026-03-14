@@ -50,7 +50,7 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
         dispatcher.getReportHandler().getTrades().reserve(bars.size());
         dispatcher.getReportHandler().getEquityPoints().reserve(bars.size());
 
-        std::cout << " NON LIVE BACKTESTING COMMENCED \n ";
+        //std::cout << " NON LIVE BACKTESTING COMMENCED \n ";
 
         result.stockCloses.reserve(bars.size());
 
@@ -63,7 +63,7 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, 
 
             result.stockCloses.push_back(marketState.current.close);
 
-            dispatcher.schedule(events::MarketEvent{ marketState.current, marketState.next});
+            dispatcher.schedule(events::MarketEvent{marketState.current, marketState.next});
             dispatcher.run();
 
         }

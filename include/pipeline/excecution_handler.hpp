@@ -29,9 +29,6 @@ class ExcecutionHandler {
         
         if (event.qty <= 0) return;
 
-        const double buyQty = descaleQty(event.qty);
-        const double curPos = descaleQty(m_portfolio.pos); // negative position implies a short
-
         // Leverage checks done in portfolio 
         m_dispatcher.schedule(events::FillEvent{event.epoch,event.side,event.qty,px,fee,event.stop });
 

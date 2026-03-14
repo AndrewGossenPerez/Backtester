@@ -17,9 +17,9 @@ class StrategyHandler{
 
     StrategyHandler(Strategy& strat,dispatchT& dispatcher) : m_strat(strat),m_dispatcher(dispatcher) {};
 
-    void on(const events::MarketEvent& event, double atr){
+    void on(const events::MarketEvent& event){
 
-        m_strat.onMarketData(event, atr);
+        m_strat.onMarketData(event);
         Signal signal=m_strat.onBar(event.bar); // Apply strategy on the bar to generate a singal on current bar
 
         if (signal.side!=trd::Side::Hold){
