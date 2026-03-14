@@ -41,13 +41,16 @@ tested on **AAPL 5-minute bars**
 
 ---
 
-## Current Features
+## Recent Benchmarks
 
-- [x] Historical CSV market-data ingestion
-- [x] Event-driven backtesting engine
-- [x] Python plotting interface
-- [ ] Build system
-- [ ] Further optimisation
+Tested on **consumer hardware**, on a single thread.
+
+| Component | Throughput |
+|---|---:|
+| CSV market-data ingestion | **~5.2M OHLCV bars/sec** |
+| Event-driven backtest engine | **~1.55M bars/sec** |
+| Strategy configuration | **EMA signaller + volatility position sizer** |
+
 
 ---
 
