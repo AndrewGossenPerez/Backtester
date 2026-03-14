@@ -12,6 +12,7 @@ The goal of this project is to build a flexible research environment for develop
 Core components:
 
 - C++ event-driven backtesting engine
+- Inbuilt Stop Loss system
 - CSV market-data ingestion
 - Python visualisation layer
 - Strategy prototyping framework
