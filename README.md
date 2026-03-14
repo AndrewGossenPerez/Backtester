@@ -4,9 +4,23 @@ A build system will be added later. I intend to create a system that allows me t
 
 ---
 
-Example EMA Signaller & Volatility Position Sizer (NSlow=24,NFast=120) AAPL
+Some backtests can be found in images (1.3 BPS SLIPPAGE, 0.8 BPS FEE)
 
 
+Example EMA Crossover Signaller & Volatility Position Sizer on AAPL 5min bars
+<div align="center">
+
+<figure style="display:inline-block; margin:10px;">
+  <img src="images/AAPL(24,120).png" width="350">
+  <figcaption><em>(24/120)</em></figcaption>
+</figure>
+
+<figure style="display:inline-block; margin:10px;">
+  <img src="images/AAPL(16,60).png" width="390">
+  <figcaption><em>(16/60)</em></figcaption>
+</figure>
+
+</div>
 
 ## Current features 
 - [x] Historical CSV market-data ingestion
