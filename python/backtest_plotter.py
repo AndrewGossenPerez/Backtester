@@ -8,7 +8,6 @@ from matplotlib.widgets import Button
 def _safe_ratio(a, b, default=0.0):
     return a / b if b != 0 else default
 
-
 def _compute_metrics(equity, pos, x, bars_per_day=78.0):
     equity = np.asarray(equity, dtype=np.float64)
     pos = np.asarray(pos, dtype=np.float64)

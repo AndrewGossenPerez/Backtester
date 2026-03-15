@@ -1,4 +1,4 @@
-
+// BuynHold.hpp, created by Andrew Gossen.
 
 #pragma once 
 #include "backtesting/strategies.hpp"

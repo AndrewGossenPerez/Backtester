@@ -13,10 +13,12 @@
 #include "core/portfolio.hpp"
 #include "pipeline/risk_handler.hpp"
 
+// Note: Any actual strategies will not be posted to the github, this is a skeleton 
+
 // ------- CONFIG -----
-inline constexpr double ATR_MULT = 1.4; // stop distance = ATR_MULT * ATR
+inline constexpr double ATR_MULT = 1.65; // stop distance = ATR_MULT * ATR
 inline constexpr double RISK_PCT = 1.0; // risk % of equity per trade
-inline constexpr double MAX_CAPITAL_PCT = 200; // Clamps the maximum amount sold/bought as % of current equity
+inline constexpr double MAX_CAPITAL_PCT = 100; // Clamps the maximum amount sold/bought as % of current equity
 // --------------------
 
 // Again, an early implementation of a risk model. 
@@ -33,18 +35,31 @@ void VolatilityScaleStop(RiskData<DispatchT>& riskData, const events::SignalEven
 
     const trd::price equity = riskData.m_portfolio.equity(riskData.m_marketState.current.close);
 
-    float riskCapital= (equity * (RISK_PCT/100));
-    float volatilityMeasure = (ATR_MULT * atr);
-    float posSize = (riskCapital/volatilityMeasure);
+    double riskCapital= (equity * (RISK_PCT/100));
+    double volatilityMeasure = (ATR_MULT * atr);
 
-    float stopLoss = (event.side==trd::Side::Sell) ? 
+    if (!(atr > 0.0) || !std::isfinite(atr)) return;
+    if (!(volatilityMeasure > 0.0) || !std::isfinite(volatilityMeasure)) return;
+
+    double posSize = (riskCapital/volatilityMeasure);
+
+    double stopLoss = (event.side==trd::Side::Sell) ? 
     (riskData.m_marketState.current.close) + volatilityMeasure : (riskData.m_marketState.current.close) - volatilityMeasure;
 
-    float maxPos = (equity*(MAX_CAPITAL_PCT/100))/(riskData.m_marketState.current.close);
+    double maxPos = (equity*(MAX_CAPITAL_PCT/100))/(riskData.m_marketState.current.close);
 
     if (posSize>maxPos) posSize=maxPos;
 
+       // Flatten
+    if (event.side==trd::Side::Sell && riskData.m_portfolio.pos>0){
+       // std::cout <<"Flattening : " <<  riskData.m_portfolio.pos << "\n";
+        posSize+=descaleQty(riskData.m_portfolio.pos);
+    } else if(event.side==trd::Side::Buy && riskData.m_portfolio.pos<0){
+        posSize+=std::abs(descaleQty(riskData.m_portfolio.pos));
+    }
+
     trd::quantity qty = static_cast<trd::quantity>(QTY_SCALE * posSize);
+    if (qty <= 0) return;
 
     std::optional<stopData> stop = stopData{ // Update the current stop loss, currently only one stop loss is registered at a time ( and is overwritten per trade ) 
         true,

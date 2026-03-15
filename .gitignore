@@ -22,3 +22,7 @@ samples/
 include/API/keys.hpp
 #csv Generator for OHLCV bars 
 python/NVDA.py
+
+#Private strategies
+include/private_risklayers
+include/private_strategies

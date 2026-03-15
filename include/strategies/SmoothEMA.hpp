@@ -12,7 +12,7 @@
 #include "backtesting/strategies.hpp"
 #include "events/events.hpp"
 
-// Early stage implementation of an EMA Signaller, will signal a buy/sell upon a change in crossover
+// Note: Any actual strategies will not be posted to the github, this is a skeleton 
 
 template <std::size_t NFast, std::size_t NSlow>
 class SmoothEMA : public Strategy {
@@ -64,21 +64,20 @@ class SmoothEMA : public Strategy {
 
         float price = m.bar.close;
 
-        // --- Compute EMA 
+        // EMA computations 
         m_fastEMA = m_fastHistory.empty() ? price : m_alphaFast * price + (1.0f - m_alphaFast) * m_fastEMA;
-
         m_slowEMA = m_slowHistory.empty() ? price : m_alphaSlow * price + (1.0f - m_alphaSlow) * m_slowEMA;
 
         m_fastHistory.push_back(m_fastEMA);
         m_slowHistory.push_back(m_slowEMA);
 
-        // --- Market change for threshold 
-        currentMarketChange = (m_fastEMA - m_slowEMA) / m_slowEMA;
+        currentMarketChange = (m_fastEMA - m_slowEMA) / m_slowEMA; // Market change for threshold 
 
         if (m_thresholdEnabled && std::abs(currentMarketChange) < m_pThresh) {
             currentSignal = trd::Side::Hold;
         } else {
 
+            // Only signals when the trend changes 
             if (m_fastEMA > m_slowEMA && prevSignal != trd::Side::Buy  ) { 
                 currentSignal = trd::Side::Buy;
             } else if (m_fastEMA < m_slowEMA && prevSignal != trd::Side::Sell) {
