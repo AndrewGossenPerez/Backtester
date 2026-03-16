@@ -3,7 +3,7 @@
 **Work-in-progress trading engine** featuring a **C++ event-driven backtesting engine**,  
 CSV market-data ingestion, and a **Python front-end for visualisation and plotting**.
 
-The goal of this project is to build a flexible research environment for developing and backtesting trading strategies.
+The goal of this project is to build a handrolled flexible research environment for developing and backtesting trading strategies.
 
 
 
