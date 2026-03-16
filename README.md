@@ -74,7 +74,6 @@ Tested on **consumer hardware**, on a single thread.
 Planned improvements:
 
 - Build system 
-- Engine performance optimisation
+- Optimisations 
 - Strategy parameter heatmaps
-- Multi-asset backtesting
-- Additional strategy modules
+
