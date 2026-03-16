@@ -8,7 +8,7 @@
 //  - Runs an event-driven backtest over a time ordered bar series gathered from the CSV ingestor
 //  - Each bar pair ( current , next ) generates a market event which propagates through the pipeline
 //  - The propogation is in the following order : 
-//  - MarketEvent -> StrategyHandler -> SignalEvent -> RiskHandler -> OrderEvent -> ExcecutionHandler -> 
+//  - MarketEvent -> SignalHandler -> SignalEvent -> RiskHandler -> OrderEvent -> ExcecutionHandler -> 
 //    FillEvent -> PortfolioHandler 
 //
 // Notes : 
@@ -18,8 +18,8 @@
 #include "core/types.hpp"
 #include "data/bar.hpp"
 #include "backtesting/backtesting.hpp"
-#include "backtesting/strategies.hpp"
-#include "strategies/BuyNHold.hpp"
+#include "backtesting/signaller.hpp"
+#include "signallers/BuyNHold.hpp"
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 #include "data/market_state.hpp"
@@ -35,7 +35,7 @@ int waitTime=65; // Waits this amount of time before trying to fetch a new bar a
 // -----------
 
 
-trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Strategy& strategy, bool live) {
+trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Signaller& strategy, bool live) {
     
     std::vector<trd::Bar> newBars;
     newBars.reserve(2);

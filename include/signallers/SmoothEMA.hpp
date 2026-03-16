@@ -9,13 +9,13 @@
 #include "core/types.hpp"
 #include "core/portfolio.hpp"
 #include "backtesting/excecution.hpp"
-#include "backtesting/strategies.hpp"
+#include "backtesting/signaller.hpp"
 #include "events/events.hpp"
 
 // Note: Any actual strategies will not be posted to the github, this is a skeleton 
 
 template <std::size_t NFast, std::size_t NSlow>
-class SmoothEMA : public Strategy {
+class SmoothEMA : public Signaller {
 
    public:
 

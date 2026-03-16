@@ -1,8 +1,8 @@
 
 #include "data/csv_reader.hpp"
-#include "backtesting/strategies.hpp"
+#include "backtesting/signaller.hpp"
 #include "backtesting/backtesting.hpp"
-#include "strategies/SmoothEMA.hpp"
+#include "signallers/SmoothEMA.hpp"
 #include "API/helper.hpp"
 
 #include <algorithm>

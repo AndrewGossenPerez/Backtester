@@ -6,10 +6,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-#include "backtesting/strategies.hpp"
+#include "backtesting/signaller.hpp"
 #include "backtesting/backtesting.hpp"
-#include "strategies/SmoothEMA.hpp"
-#include "strategies/BuyNHold.hpp"
+#include "signallers/SmoothEMA.hpp"
+#include "signallers/BuyNHold.hpp"
 #include "data/csv_reader.hpp"
 #include "data/config.hpp"
 #include <cstdint>
@@ -21,21 +21,20 @@ static trd::Result run_backtest(int startingAmount) {
 
     trd::price startingEquity=static_cast<trd::price>(startingAmount);
     trd::csvReader reader;
-    std::vector<trd::Bar> bars = reader.loadBars("samples/NVDA.csv");
+    std::vector<trd::Bar> bars = reader.loadBars("samples/AAPL.csv");
     BacktestPortfolio p;
     p.setBalance(startingEquity);
     std::cout << "Bar size : " << bars.size() << "\n";
    
     trd::Backtest bt(p);
 
-    //ExponentialMovingAverage<12,26> strat(true,0.0023); 
-    SmoothEMA<20,100> strat(true, 0.0005);
+    SmoothEMA<20,100> signal(true, 0.0005);
     //BuyAndHold strat;
 
-    trd::Result re=bt.run(bars,strat,false);
+    trd::Result re=bt.run(bars,signal,false);
 
-    re.fastN=strat.getHistory(true);
-    re.slowN=strat.getHistory(false);
+    re.fastN=signal.getHistory(true);
+    re.slowN=signal.getHistory(false);
 
     return re;
 

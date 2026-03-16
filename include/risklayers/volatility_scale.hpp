@@ -16,8 +16,8 @@
 // Note: Any actual strategies will not be posted to the github, this is a skeleton 
 
 // ------- CONFIG -----
-inline constexpr double ATR_MULT = 1.75; // stop distance = ATR_MULT * ATR
-inline constexpr double RISK_PCT = 1.35; // risk % of equity per trade
+inline constexpr double ATR_MULT = 1.5; // stop distance = ATR_MULT * ATR
+inline constexpr double RISK_PCT = 1.0; // risk % of equity per trade
 inline constexpr double MAX_CAPITAL_PCT = 100; // Clamps the maximum amount sold/bought as % of current equity
 //inline constexpr double MIN_STOP_PCT = 0.0 / 100; // Clamps the minimum volatility measure to 0.2% of the close, 
 //inline constexpr double MIN_ATR_PCT = 0.1 / 100;

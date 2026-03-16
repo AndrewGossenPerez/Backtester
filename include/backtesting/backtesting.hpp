@@ -13,7 +13,7 @@
 #include "core/types.hpp"
 #include "core/portfolio.hpp"
 #include "backtesting/excecution.hpp"
-#include "backtesting/strategies.hpp"
+#include "backtesting/signaller.hpp"
 
 namespace trd{ 
 
@@ -76,7 +76,7 @@ class Backtest{
 
     Backtest(Portfolio& portfolio) : m_portfolio(portfolio) {}
 
-    Result run(std::vector<trd::Bar>& bars,Strategy& strategy,bool live);
+    Result run(std::vector<trd::Bar>& bars,Signaller& strategy,bool live);
 
     private: 
 

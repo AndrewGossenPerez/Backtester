@@ -1,9 +1,9 @@
 // BuynHold.hpp, created by Andrew Gossen.
 
 #pragma once 
-#include "backtesting/strategies.hpp"
+#include "backtesting/signaller.hpp"
 
-class BuyAndHold : public Strategy { // Buy once then hold forever 
+class BuyAndHold : public Signaller { // Buy once then hold forever 
 
     public:
     BuyAndHold() = default;
