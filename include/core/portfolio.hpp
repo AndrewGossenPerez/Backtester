@@ -1,7 +1,7 @@
 // portfolio.hpp, created by Andrew Gossen.
 
 // Notes:
-// For buy/sell, the quantity is assumed to be already scaled to QTY_SCALE
+// - For buy/sell, the quantity is assumed to be already scaled to QTY_SCALE
 
 #pragma once
 #include "core/types.hpp"

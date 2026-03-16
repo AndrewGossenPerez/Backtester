@@ -39,7 +39,7 @@ static std::string readFile(const std::string& file){
 
 }
 
-// --- Utility helpers
+// --- Helpers
 
 void trd::printBar(const Bar& bar){
     std::cout << "Bar - Epoch : " << bar.epoch
@@ -214,17 +214,18 @@ std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
     while (p<end){
 
         // Allocate a bar to each row in the csv
+
         trd::Bar bar; 
         int membersInitialised{0}; // If less than 6 members were initialised, bar is corrupted
 
-        membersInitialised+=parseTimestampField(p,end,bar.epoch);
-        membersInitialised+=parseOHLCV(p,end,bar.open);
-        membersInitialised+=parseOHLCV(p,end,bar.high);
-        membersInitialised+=parseOHLCV(p,end,bar.low);
-        membersInitialised+=parseOHLCV(p,end,bar.close);
+        membersInitialised+=parseTimestampField(p,end,bar.epoch); // Timestamp/epoch
+        membersInitialised+=parseOHLCV(p,end,bar.open); // Open
+        membersInitialised+=parseOHLCV(p,end,bar.high); // High
+        membersInitialised+=parseOHLCV(p,end,bar.low); // Low 
+        membersInitialised+=parseOHLCV(p,end,bar.close); // Close 
         trd::quantity vol_ticks;
-        membersInitialised += parseQuantity(p, end, QTY_SCALE, vol_ticks);
-        bar.volume=static_cast<trd::quantity>(vol_ticks); // or make quantity int64_t
+        membersInitialised += parseQuantity(p, end, QTY_SCALE, vol_ticks); // Bar Vol
+        bar.volume=static_cast<trd::quantity>(vol_ticks); 
 
         if (membersInitialised==6) bars.push_back(std::move(bar));
 

@@ -1,10 +1,8 @@
 // report_handler.hpp, created by Andrew Gossen.
 
-// ----
 // The report handler logs all completed trades during a FillEvent, 
 // and the equity for each bar (setEquity is called in backtester.cpp )
 // the m_trades and m_equityCurve vectors are reserved to fit bars.size() 
-// ---- 
 
 #pragma once 
 #include "events/events.hpp"
