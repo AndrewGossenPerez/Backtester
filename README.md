@@ -29,7 +29,7 @@ Each market bar propagates through the following event pipeline:
    Simulates market execution and converts the `OrderEvent` into an authoritative `FillEvent`.
 
 4. **Portfolio Handler**  
-   Processes the `FillEvent`, updating portfolio state, positions, and equity.
+   Processes the `FillEvent`, which in turn updates position 
 
 ## Backtests currently include **transaction costs**:
 
