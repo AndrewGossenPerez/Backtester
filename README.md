@@ -68,7 +68,8 @@ Each market bar propagates through the following event pipeline:
 - **7,371,037 OHLCV bars**
 - Single-threaded execution
 - 1000 runs (with warmup)
-
+- Simple EMA signaller and volatility sizer strategy
+- 
 ---
 
 ### Backtesting Engine
