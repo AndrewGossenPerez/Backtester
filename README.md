@@ -24,9 +24,12 @@ cmake --build build -j
 ## Python example
 
 ```bash
-python3 -m pip install -r requirements.txt
-PYTHONPATH=build python3 python/backtest_plotter.py
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+PYTHONPATH="$PWD/build" python python/backtest_plotter.py
 ```
+
 
 > Note: The Python example (for now) uses a predefined backtest configuration in [`binding.cpp`](src/binding/binding.cpp).  
 > To modify the strategy, dataset, or parameters, edit `run_backtest` and rebuild.
