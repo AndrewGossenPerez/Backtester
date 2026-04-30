@@ -75,7 +75,7 @@ void benchMark() {
 
     // Load once for the actual backtest benchmark.
     std::vector<trd::Bar> mainBars =
-        reader.loadBars("samples/BTC.csv");
+        reader.loadBars("samples/AAPL.csv");
 
     if (mainBars.empty()) {
         std::printf("No bars loaded.\n");
@@ -164,11 +164,11 @@ void benchMark() {
     csvSecs.reserve(CSV_RUNS);
 
     // One untimed load to warm OS cache/parser path.
-    (void) reader.loadBars("samples/BTC.csv");
+    (void) reader.loadBars("samples/AAPL.csv");
 
     for (int i = 0; i < CSV_RUNS; ++i) {
         const auto t1 = clock_type::now();
-        std::vector<trd::Bar> bars = reader.loadBars("samples/BTC.csv");
+        std::vector<trd::Bar> bars = reader.loadBars("samples/AAPL.csv");
         const auto t2 = clock_type::now();
 
         if (bars.empty()) {

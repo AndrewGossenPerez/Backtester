@@ -16,7 +16,10 @@ __pycache__/
 
 # My own stuff
 .vscode/
-samples/
 
 #csv Generator for OHLCV bars 
 python/Generator.py
+
+#Sample data
+samples/*
+!samples/AAPL.csv
