@@ -1,11 +1,34 @@
-# Trading Engine
+<img src="images/AAPL(24,120).png" width="500">
 
-**Work-in-progress trading engine** featuring a **C++ event-driven backtesting engine**,  
-CSV market-data ingestion, and a **Python front-end for visualisation and plotting**.
+# A Backtester
 
-The goal of this project is to build a handrolled flexible research environment for developing and backtesting trading strategies.
+Work-in-progress trading engine featuring a C++ event-driven backtesting engine,  
+CSV market-data ingestion, and a Python front-end for visualisation and plotting.
 
+### Installation
+## Build
 
+```bash
+git clone --recursive https://github.com/AndrewGossenPerez/Backtester.git
+cd Backtester
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+## Run
+
+```bash
+./build/trading_main
+```
+
+## Python example
+
+```bash
+PYTHONPATH=build python3 python/backtest_plotter.py
+```
+
+> Note: The Python example (for now) uses a predefined backtest configuration in [`binding.cpp`](src/binding/binding.cpp).  
+> To modify the strategy, dataset, or parameters, edit `run_backtest` and rebuild.
 
 ## Core components:
 
@@ -33,27 +56,15 @@ Each market bar propagates through the following event pipeline:
 
 ## Backtests currently include **transaction costs**:
 
-- Slippage: **1.3 bps**
-- Fee: **0.8 bps**
-
+- Slippage: **2.8 bps**
+- Fee: **1.0 bps**
+> These can be modified in [`config.hpp`](include/data/config.hpp).  
 ---
 
 ## Example Strategy
 
 **EMA crossover signaller with volatility position sizing**  
 tested on **AAPL 5-minute bars**
-
-### Parameter Comparison
-
-| EMA (24 / 120) | EMA (16 / 60) |
-|---|---|
-| <img src="images/AAPL(24,120).png" width="420"> | <img src="images/AAPL(16,60).png" width="420"> |
-
-| EMA (30 / 150) | EMA (40 / 200) |
-|---|---|
-| <img src="images/AAPL(30,150).png" width="420"> | <img src="images/AAPL(40,200).png" width="420"> |
-
----
 
 ## Recent Benchmarks
 
