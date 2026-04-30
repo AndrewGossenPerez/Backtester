@@ -62,23 +62,47 @@ Each market bar propagates through the following event pipeline:
 > These can be modified in [`config.hpp`](include/data/config.hpp).  
 ---
 
-## Example Strategy
-
-**EMA crossover signaller with volatility position sizing**  
-tested on **AAPL 5-minute bars**
-
 ## Recent Benchmarks
 
-Tested on **consumer hardware**, on a single thread.
-(p50,n=1000) on a 936k AAPL OHLCV dataset
+### Dataset
+- **7,371,037 OHLCV bars**
+- Single-threaded execution
+- 1000 runs (with warmup)
 
-| Component | Throughput |
+---
+
+### Backtesting Engine
+
+| Metric | Value |
 |---|---:|
-| CSV market-data ingestion | **~5.2M OHLCV bars/sec** |
-| Event-driven backtest engine | **~1.55M bars/sec** |
-| Strategy configuration | **EMA signaller + volatility position sizer** |
+| Median runtime | **0.256 s** |
+| Mean runtime | **0.270 ± 0.039 s** |
+| p90 runtime | **0.313 s** |
+| Min / Max | **0.237 / 0.747 s** |
+| Median bars/sec | **28.8M** |
+| Mean bars/sec | **27.3M** |
+| p90 bars/sec | **23.6M** |
+| Median fills | **4,742** |
+| Median fills/sec | **18,532** |
 
+---
 
+### CSV Ingestion
+
+| Metric | Value |
+|---|---:|
+| Median runtime | **0.398 s** |
+| Mean runtime | **0.421 ± 0.076 s** |
+| p90 runtime | **0.498 s** |
+| Median bars/sec | **18.5M** |
+| Mean bars/sec | **17.5M** |
+---
+
+### Notes
+
+- Median used to reduce variance from system noise  
+- Warmup runs performed before measurement  
+- Includes full event pipeline (strategy → risk → execution → portfolio)  
 ---
 
 ## Future Work
