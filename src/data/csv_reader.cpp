@@ -142,61 +142,111 @@ static bool parseQuantity(const char*& p, const char* end,std::int64_t scale, st
 }
 
 static bool parseTimestampField(const char*& p, const char* end, trd::timestamp& out) {
+    if (p >= end) return false;
 
-    // Must have at least 10 chars for YYYY-MM-DD
-    if (end - p < 10) return false;
+    // ISO-like timestamp:
+    // YYYY-MM-DD
+    // YYYY-MM-DD HH:MM:SS
+    // YYYY-MM-DD HH:MM:SS.123456
+    if (end - p >= 10 && p[4] == '-' && p[7] == '-') {
+        unsigned y = digit(p[0]) * 1000 + digit(p[1]) * 100 + digit(p[2]) * 10 + digit(p[3]);
+        unsigned m = digit(p[5]) * 10 + digit(p[6]);
+        unsigned d = digit(p[8]) * 10 + digit(p[9]);
+        p += 10;
 
-    // Check YYYY-MM-DD
-    if (p[4] != '-' || p[7] != '-') return false;
+        int64_t days = daysFromEpoch(y, m, d);
+        int64_t seconds = days * 86400;
 
-    unsigned y = digit(p[0]) * 1000 + digit(p[1]) * 100 + digit(p[2]) * 10 + digit(p[3]);
-    unsigned m = digit(p[5]) * 10 + digit(p[6]);
-    unsigned d = digit(p[8]) * 10 + digit(p[9]);
-    p += 10;
+        if (p < end && (*p == ' ' || *p == ',')) ++p;
 
-    // Convert date to epoch (seconds at 00:00:00)
-    int64_t days = daysFromEpoch(y, m, d);
-    int64_t seconds = days * 86400;
+        if (end - p >= 8 && p[2] == ':' && p[5] == ':') {
+            unsigned hh = digit(p[0]) * 10 + digit(p[1]);
+            unsigned mm = digit(p[3]) * 10 + digit(p[4]);
+            unsigned ss = digit(p[6]) * 10 + digit(p[7]);
 
-    // Skip optional space or comma between date and time
-    if (p < end && (*p == ' ' || *p == ',')) ++p;
-
-    // Parse HH:MM:SS if present
-    if (end - p >= 8 && p[2] == ':' && p[5] == ':') {
-        unsigned hh = digit(p[0]) * 10 + digit(p[1]);
-        unsigned mm = digit(p[3]) * 10 + digit(p[4]);
-        unsigned ss = digit(p[6]) * 10 + digit(p[7]);
-        seconds += hh * 3600 + mm * 60 + ss;
-        p += 8;
-    }
-
-    // Optionally present fractional seconds
-    int64_t frac = 0;
-    if (p < end && *p == '.') {
-        ++p;
-        int digits = 0;
-        while (p < end && *p >= '0' && *p <= '9' && digits < 6) {
-            frac = frac * 10 + (*p - '0');
-            ++p;
-            ++digits;
+            seconds += hh * 3600 + mm * 60 + ss;
+            p += 8;
         }
-        while (digits < 6) { frac *= 10; ++digits; }
+
+        int64_t frac = 0;
+
+        if (p < end && *p == '.') {
+            ++p;
+            int digits = 0;
+
+            while (p < end && *p >= '0' && *p <= '9' && digits < 6) {
+                frac = frac * 10 + (*p - '0');
+                ++p;
+                ++digits;
+            }
+
+            while (digits < 6) {
+                frac *= 10;
+                ++digits;
+            }
+
+            while (p < end && *p >= '0' && *p <= '9') ++p;
+        }
+
+        if (p < end && (*p == '+' || *p == '-') && (end - p >= 6) && p[3] == ':') {
+            p += 6;
+        }
+
+        if (p < end && *p == ',') ++p;
+
+        out = seconds * TS_SCALE + frac;
+        return true;
     }
 
-    // Skip timezone suffix if present 
-    if (p < end && (*p == '+' || *p == '-') && (end - p >= 6) && p[3] == ':') {
-        p += 6;
+    // Unix timestamp:
+    // 1325413440
+    // 1325413440.0
+    // 1325413440.123456
+    if (*p >= '0' && *p <= '9') {
+        int64_t seconds = 0;
+
+        while (p < end && *p >= '0' && *p <= '9') {
+            int d = *p - '0';
+
+            if (seconds > (std::numeric_limits<int64_t>::max() - d) / 10) {
+                return false;
+            }
+
+            seconds = seconds * 10 + d;
+            ++p;
+        }
+
+        int64_t frac = 0;
+
+        if (p < end && *p == '.') {
+            ++p;
+
+            int digits = 0;
+            while (p < end && *p >= '0' && *p <= '9' && digits < 6) {
+                frac = frac * 10 + (*p - '0');
+                ++p;
+                ++digits;
+            }
+
+            while (digits < 6) {
+                frac *= 10;
+                ++digits;
+            }
+
+            while (p < end && *p >= '0' && *p <= '9') ++p;
+        }
+
+        if (p < end && *p != ',') return false;
+        ++p;
+
+        out = seconds * TS_SCALE + frac;
+        return true;
     }
 
-    // Skip trailing comma if present
-    if (p < end && *p == ',') ++p;
-
-    out = seconds * TS_SCALE + frac;
-    return true;
-
+    return false;
 }
 
-// -- Methods
+// -- Methods 
 
 std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
 

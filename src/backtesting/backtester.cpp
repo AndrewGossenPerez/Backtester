@@ -30,10 +30,6 @@
 #include <iostream>
 #include <vector>
 
-// -- CONFIG --
-int waitTime=65; // Waits this amount of time before trying to fetch a new bar again
-// -----------
-
 
 trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Signaller& strategy, bool live) {
     
@@ -44,115 +40,29 @@ trd::Result trd::Backtest::run(std::vector<trd::Bar>& bars, Signaller& strategy,
     trd::Result result;
 
     events::Dispatcher<2048> dispatcher(strategy, marketState, m_portfolio, result);
+    
+    dispatcher.getReportHandler().getTrades().reserve(bars.size());
+    dispatcher.getReportHandler().getEquityPoints().reserve(bars.size());
 
-    if (!live) {
-        
-        dispatcher.getReportHandler().getTrades().reserve(bars.size());
-        dispatcher.getReportHandler().getEquityPoints().reserve(bars.size());
+    //std::cout << " NON LIVE BACKTESTING COMMENCED \n ";
 
-        //std::cout << " NON LIVE BACKTESTING COMMENCED \n ";
+    result.stockCloses.reserve(bars.size());
 
-        result.stockCloses.reserve(bars.size());
+    // Historical backtest
+    for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
 
-        // Historical backtest
-        for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
+        if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
+        marketState.current = bars[i];
+        marketState.next = bars[i + 1];
 
-            if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
-            marketState.current = bars[i];
-            marketState.next = bars[i + 1];
+        result.stockCloses.push_back(marketState.current.close);
 
-            result.stockCloses.push_back(marketState.current.close);
-
-            dispatcher.schedule(events::MarketEvent{marketState.current, marketState.next});
-            dispatcher.run();
-
-        }
-
-        result.finalEquity = m_portfolio.equity(bars.back().close);
-        
-    }
-
-    else { // Live trading on my google cloud VM for paper testing 
-
-
-        dispatcher.getReportHandler().getTrades().reserve(5000);
-        dispatcher.getReportHandler().getEquityPoints().reserve(5000);
-
-        std::cout << " LIVE TRADING COMMENCED, Waiting for market to open \n ";
-        
-        long marketsOpen=timeForMarket();
-        std::cout << "Market open in : " << marketsOpen << ". \n";
-        std::this_thread::sleep_for(std::chrono::seconds(marketsOpen+10));
-
-        trd::timestamp lastEpoch = 0;
-        std::cout << " Process initial chunk, bars : " << bars.size() << "\n";
-
-        for (std::size_t i = 0; i + 1 < bars.size(); ++i) {
-            
-            if (m_portfolio.balance <= 0.0) break;
-            if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
-            marketState.current = bars[i];
-            marketState.next = bars[i + 1];
-            dispatcher.schedule(events::MarketEvent{ marketState.current, marketState.next });
-            dispatcher.run();
-
-        }
-
-        while (m_portfolio.balance > 0.0) {
-
-            std::cout << "\n Fetching latest two bars... \n";
-            std::cout << "Balance : " << m_portfolio.balance << " | Position : " << descaleQty(m_portfolio.pos) << "\n";    
-
-            bool success = addBar(newBars, 2); 
-            if (!success) {
-                // Check if market is closed and wait until it opens again
-                long secondsToOpen = timeForMarket();
-                if (secondsToOpen > 0) {
-                    std::cout << "Market is closed, waiting for " << secondsToOpen << " seconds until next open...\n";
-                    std::this_thread::sleep_for(std::chrono::seconds(secondsToOpen + 10)); 
-                }
-                continue; 
-            }
-
-            std::cout << "Current Bar LE: " << bars.back().epoch << "\n";
-            std::cout << "Bar epochs: " << newBars[0].epoch << " | " << newBars[1].epoch << "\n";
-
-            if (newBars.empty()) {
-                std::this_thread::sleep_for(std::chrono::seconds(waitTime));
-                continue;
-            }
-
-            trd::timestamp latestEpoch = newBars.back().epoch;
-            if (latestEpoch == lastEpoch) {
-                std::this_thread::sleep_for(std::chrono::seconds(waitTime));
-                continue;
-            }
-
-            lastEpoch = latestEpoch;
-            if (!bars.empty() && bars.back().epoch == newBars[0].epoch) {
-                bars.push_back(newBars[1]);
-            } else {
-                bars.insert(bars.end(), newBars.begin(), newBars.end());
-            }
-
-            size_t i = bars.size() - 2;  // second-last bar is current
-            if (i > 0) { marketState.prev = bars[i - 1]; marketState.hasPrev = true; }
-            marketState.current = bars[i];
-            marketState.next = bars[i + 1];
-            dispatcher.schedule(events::MarketEvent{ marketState.current, marketState.next });
-            dispatcher.run();
-
-            std::cout << "Processed new live bar (epoch): " << marketState.current.epoch << std::endl;
-            std::cout << "New bar size : " << bars.size() << "\n";
-
-            newBars.clear();
-
-        }
-
-
-        result.finalEquity = m_portfolio.equity(bars.back().close);
+        dispatcher.schedule(events::MarketEvent{marketState.current, marketState.next});
+        dispatcher.run();
 
     }
+
+    result.finalEquity = m_portfolio.equity(bars.back().close);
 
     result.equityPoints = dispatcher.getReportHandler().getEquityPoints();
     result.trades = dispatcher.getReportHandler().getTrades();

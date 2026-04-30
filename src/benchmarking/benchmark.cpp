@@ -67,8 +67,8 @@ Summary summarize(std::vector<double> values) {
 void benchMark() {
     std::printf("--- BACKTEST BENCHMARK STARTING :) ---\n");
 
-    constexpr int BACKTEST_RUNS = 100;
-    constexpr int CSV_RUNS = 30;
+    constexpr int BACKTEST_RUNS = 1000;
+    constexpr int CSV_RUNS = 1000;
 
     const trd::price startingEquity{1'000};
 
@@ -76,10 +76,10 @@ void benchMark() {
 
     // Load once for the actual backtest benchmark.
     std::vector<trd::Bar> mainBars =
-        reader.loadBars("samples/AAPL.csv");
+        reader.loadBars("samples/BTC.csv");
 
     if (mainBars.empty()) {
-        std::printf("No bars loaded. Check samples/AAPL.csv\n");
+        std::printf("No bars loaded.\n");
         return;
     }
 
@@ -165,11 +165,11 @@ void benchMark() {
     csvSecs.reserve(CSV_RUNS);
 
     // One untimed load to warm OS cache/parser path.
-    (void) reader.loadBars("samples/AAPL.csv");
+    (void) reader.loadBars("samples/BTC.csv");
 
     for (int i = 0; i < CSV_RUNS; ++i) {
         const auto t1 = clock_type::now();
-        std::vector<trd::Bar> bars = reader.loadBars("samples/AAPL.csv");
+        std::vector<trd::Bar> bars = reader.loadBars("samples/BTC.csv");
         const auto t2 = clock_type::now();
 
         if (bars.empty()) {

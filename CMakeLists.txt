@@ -13,7 +13,6 @@ find_package(CURL REQUIRED)
 add_library(engine_core SHARED
     src/backtesting/backtester.cpp
     src/data/csv_reader.cpp
-    src/alpaca/helper.cpp    
 )
 
 # Regonise Include dir 
