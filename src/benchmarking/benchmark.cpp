@@ -1,113 +1,195 @@
-
 // benchmark.hpp, created by Andrew Gossen.
 
-// Benchmark harness for the trading engine
-// Used to measure CSV ingestion throughput and backtesting performance
 
 #include "data/csv_reader.hpp"
-#include "backtesting/strategies.hpp"
+#include "backtesting/signaller.hpp"
 #include "backtesting/backtesting.hpp"
-#include "strategies/SmoothEMA.hpp"
+#include "signallers/SmoothEMA.hpp"
 #include "API/helper.hpp"
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <vector>
 
+namespace {
 
-void benchMark() {
+using clock_type = std::chrono::steady_clock;
 
-    using clock = std::chrono::steady_clock;
+struct Summary {
+    double median;
+    double p90;
+    double min;
+    double max;
+    double mean;
+    double stdev;
+};
 
-    std::printf("--- BACK TEST BENCHMARK STARTING :) ---\n");
+Summary summarize(std::vector<double> values) {
+    std::sort(values.begin(), values.end());
 
-    trd::price startingEquity{1'000};
-    trd::csvReader reader;
+    const std::size_t n = values.size();
 
-    BacktestPortfolio portfolio;
-    portfolio.setBalance(startingEquity);
-    SmoothEMA<30,90> strat(false, 0.0015);
-
-    trd::Backtest bt(portfolio);
-    std::vector<trd::Bar> testBars = reader.loadBars("samples/AAPL.csv");
-
-    auto t1CSV = clock::now();
-    std::vector<trd::Bar> mainBars = reader.loadBars("samples/BTC5Min.csv");
-    auto t2CSV = clock::now();
-
-    std::printf("\n -- BARS LOADED -- \n");
-
-    auto warmUp=[&](){
-        std::printf("\n -- ENGINE WARMUP -- \n");
-        for (int i=0;i<100;i++) {
-            bt.run(testBars,strat,false);
-        }
-        std::printf("\n -- ENGINE WARMUP COMPLETED -- \n");
-    };
-    (void) warmUp; // stop the warning ( temporary)
-    //warmUp();
-
-    double secondsCSV = std::chrono::duration<double>(t2CSV - t1CSV).count();
-    const double barsProcessed = (mainBars.size() >= 2) ? double(mainBars.size() - 1) : 0.0;
-
-    // Measure N backtest Runs 
-    constexpr int N = 1000;
-    std::vector<double> secs;
-    std::vector<double> fills;
-    secs.reserve(N);
-    fills.reserve(N);
-    trd::Result re; 
-    
-    for (int i = 0; i < N; ++i) { // Backtest N times against the actual data 
-        portfolio.setBalance(startingEquity);
-        auto t1 = clock::now();
-        re=bt.run(mainBars, strat,false);
-        auto t2 = clock::now();
-        double s = std::chrono::duration<double>(t2 - t1).count();
-        secs.push_back(s);
-        fills.push_back(double(re.trades.size()));
+    double sum = 0.0;
+    for (double v : values) {
+        sum += v;
     }
 
-    std::vector<double> secsSorted = secs;
-    std::sort(secsSorted.begin(), secsSorted.end());
+    const double mean = sum / static_cast<double>(n);
 
-    // Median, p90, max and min backtest elapsed time 
-    auto median= secsSorted[secsSorted.size() / 2];
-    auto p90 = secsSorted[(secsSorted.size() * 90) / 100];
-    auto minT = secsSorted.front();
-    auto maxT = secsSorted.back();
+    double sq = 0.0;
+    for (double v : values) {
+        const double d = v - mean;
+        sq += d * d;
+    }
 
-    // Median amount of fills excecued
-    std::vector<double> fillsSorted = fills;
-    std::sort(fillsSorted.begin(), fillsSorted.end());
-    double medianFills = fillsSorted[fillsSorted.size() / 2];
+    const double stdev = (n > 1)
+        ? std::sqrt(sq / static_cast<double>(n - 1))
+        : 0.0;
 
-    // Throughput calculation from median time
-    double barsPerSecMedian = barsProcessed / median;
-    double barsPerSecP90 = barsProcessed / p90;
-    double fillsPerSecMedian = medianFills / median;
+    const std::size_t p90Index =
+        std::min(n - 1, static_cast<std::size_t>(n * 0.90));
 
-    std::cout << "\n--- TRADING RESULTS ---\n";
-    std::printf("[final position]: %.5Lf assets\n",descaleQty(portfolio.pos));
-    std::printf("[final equity]: $%f \n", re.equityPoints.back().equity);
-
-    std::cout << "\n--- BENCHMARKS BACKTESTER (" << N << " runs) ---\n";
-    std::printf("[bars loaded]: %zu bars\n", mainBars.size());
-    std::printf("[median time]: %.9f s\n", median);
-    std::printf("[p90 time]: %.9f s\n", p90);
-    std::printf("[min/max]: %.9f / %.9f s\n", minT, maxT);
-    std::printf("[median bars/sec]: %.0f\n", barsPerSecMedian);
-    std::printf("[p90 bars/sec]: %.0f\n", barsPerSecP90);
-    std::printf("[median fills]: %.0f\n", medianFills);
-    std::printf("[median fills/sec]: %.0f\n", fillsPerSecMedian);
-
-    std::cout << "\n--- BENCHMARKS CSV INGESTION ---\n";
-    std::printf("[bars/sec]: %.0f\n", (mainBars.size() / secondsCSV));
-    std::printf("[elapsed]: %.9f s\n", secondsCSV);
-
-    return;
-
+    return Summary{
+        values[n / 2],
+        values[p90Index],
+        values.front(),
+        values.back(),
+        mean,
+        stdev
+    };
 }
 
+} // namespace
+
+void benchMark() {
+    std::printf("--- BACKTEST BENCHMARK STARTING :) ---\n");
+
+    constexpr int BACKTEST_RUNS = 100;
+    constexpr int CSV_RUNS = 30;
+
+    const trd::price startingEquity{1'000};
+
+    trd::csvReader reader;
+
+    // Load once for the actual backtest benchmark.
+    std::vector<trd::Bar> mainBars =
+        reader.loadBars("samples/AAPL.csv");
+
+    if (mainBars.empty()) {
+        std::printf("No bars loaded. Check samples/AAPL.csv\n");
+        return;
+    }
+
+    std::printf("\n-- BARS LOADED --\n");
+    std::printf("[bars loaded]: %zu\n", mainBars.size());
+
+    // Warm up using separate objects so the measured runs do not inherit state.
+    std::printf("\n-- ENGINE WARMUP --\n");
+    for (int i = 0; i < 20; ++i) {
+        BacktestPortfolio warmPortfolio;
+        warmPortfolio.setBalance(startingEquity);
+
+        SmoothEMA<30, 90> warmStrat(false, 0.0015);
+        trd::Backtest warmBt(warmPortfolio);
+
+        (void) warmBt.run(mainBars, warmStrat, false);
+    }
+    std::printf("-- ENGINE WARMUP COMPLETED --\n");
+
+    std::vector<double> backtestSecs;
+    std::vector<double> fills;
+
+    backtestSecs.reserve(BACKTEST_RUNS);
+    fills.reserve(BACKTEST_RUNS);
+
+    trd::Result lastResult;
+    BacktestPortfolio lastPortfolio;
+
+    for (int i = 0; i < BACKTEST_RUNS; ++i) {
+        BacktestPortfolio runPortfolio;
+        runPortfolio.setBalance(startingEquity);
+
+        SmoothEMA<30, 90> runStrat(false, 0.0015);
+        trd::Backtest runBt(runPortfolio);
+
+        const auto t1 = clock_type::now();
+        trd::Result result = runBt.run(mainBars, runStrat, false);
+        const auto t2 = clock_type::now();
+
+        const double seconds = std::chrono::duration<double>(t2 - t1).count();
+
+        backtestSecs.push_back(seconds);
+        fills.push_back(static_cast<double>(result.trades.size()));
+
+        lastResult = std::move(result);
+        lastPortfolio = runPortfolio;
+    }
+
+    const Summary backtest = summarize(backtestSecs);
+    const Summary fillStats = summarize(fills);
+
+    const double barsProcessed =
+        (mainBars.size() >= 2) ? static_cast<double>(mainBars.size() - 1) : 0.0;
+
+    const double medianBarsPerSec = barsProcessed / backtest.median;
+    const double p90BarsPerSec = barsProcessed / backtest.p90;
+    const double meanBarsPerSec = barsProcessed / backtest.mean;
+
+    const double medianFillsPerSec = fillStats.median / backtest.median;
+
+    std::cout << "\n--- TRADING RESULTS ---\n";
+
+    if (!lastResult.equityPoints.empty()) {
+        std::printf("[final equity]: $%f\n",
+                    lastResult.equityPoints.back().equity);
+    }
+
+    std::printf("[last run trades]: %zu\n", lastResult.trades.size());
+
+    std::cout << "\n--- BENCHMARKS BACKTESTER (" << BACKTEST_RUNS << " runs) ---\n";
+    std::printf("[median time]: %.9f s\n", backtest.median);
+    std::printf("[mean time]: %.9f ± %.9f s\n", backtest.mean, backtest.stdev);
+    std::printf("[p90 time]: %.9f s\n", backtest.p90);
+    std::printf("[min/max]: %.9f / %.9f s\n", backtest.min, backtest.max);
+    std::printf("[median bars/sec]: %.0f\n", medianBarsPerSec);
+    std::printf("[mean bars/sec]: %.0f\n", meanBarsPerSec);
+    std::printf("[p90 bars/sec]: %.0f\n", p90BarsPerSec);
+    std::printf("[median fills]: %.0f\n", fillStats.median);
+    std::printf("[median fills/sec]: %.0f\n", medianFillsPerSec);
+
+    // CSV ingestion benchmark.
+    std::vector<double> csvSecs;
+    csvSecs.reserve(CSV_RUNS);
+
+    // One untimed load to warm OS cache/parser path.
+    (void) reader.loadBars("samples/AAPL.csv");
+
+    for (int i = 0; i < CSV_RUNS; ++i) {
+        const auto t1 = clock_type::now();
+        std::vector<trd::Bar> bars = reader.loadBars("samples/AAPL.csv");
+        const auto t2 = clock_type::now();
+
+        if (bars.empty()) {
+            std::printf("CSV benchmark failed: no bars loaded.\n");
+            return;
+        }
+
+        csvSecs.push_back(std::chrono::duration<double>(t2 - t1).count());
+    }
+
+    const Summary csv = summarize(csvSecs);
+
+    std::cout << "\n--- BENCHMARKS CSV INGESTION (" << CSV_RUNS << " runs) ---\n";
+    std::printf("[median elapsed]: %.9f s\n", csv.median);
+    std::printf("[mean elapsed]: %.9f ± %.9f s\n", csv.mean, csv.stdev);
+    std::printf("[p90 elapsed]: %.9f s\n", csv.p90);
+    std::printf("[median bars/sec]: %.0f\n",
+                static_cast<double>(mainBars.size()) / csv.median);
+    std::printf("[mean bars/sec]: %.0f\n",
+                static_cast<double>(mainBars.size()) / csv.mean);
+
+    std::printf("\n- Program finished :) -\n");
+}

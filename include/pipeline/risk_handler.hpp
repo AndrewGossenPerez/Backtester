@@ -1,5 +1,9 @@
 // risk_handler.hpp, created by Andrew Gossen.
 
+// Stores risk metadata for each risk model to use 
+// Note this pipeline header doesn't dispatch any events, 
+// the riskmodel is dispatched to in events/dispatcher.hpp
+
 #pragma once
 
 #include <algorithm>
@@ -67,7 +71,6 @@ class RiskData {
     void on(const events::MarketEvent& ev){
         trd::Bar current=ev.bar;
         barHistory.overwrite(current); // Add the current bar to the history for ATR calculation
-
         // Store current ATR for plotting 
         getATRs().push_back(calculateATR());
     }
@@ -85,15 +88,3 @@ class RiskData {
     std::vector<trd::price> m_atrs;
     
 };
-
-// Risk Functions 
-
-// Will simply follow the signal without any risk management
-template <typename DispatchT>
-void FollowThrough(RiskData<DispatchT>& riskData, const events::SignalEvent& event)
-{
-    return;
-
-
-}
-

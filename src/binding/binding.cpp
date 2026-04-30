@@ -10,6 +10,8 @@
 #include "backtesting/backtesting.hpp"
 #include "signallers/SmoothEMA.hpp"
 #include "signallers/BuyNHold.hpp"
+#include "private_risklayers/LSweep.hpp"
+#include "private_strategies/LSweep.hpp"
 #include "data/csv_reader.hpp"
 #include "data/config.hpp"
 #include <cstdint>
@@ -28,13 +30,14 @@ static trd::Result run_backtest(int startingAmount) {
    
     trd::Backtest bt(p);
 
-    SmoothEMA<20,100> signal(true, 0.0005);
-    //BuyAndHold strat;
+   // SmoothEMA<20,100> signal(true, 0.0005);
+    //BuyAndHold signal;
+    LiquiditySweep<30> signal;
 
     trd::Result re=bt.run(bars,signal,false);
 
-    re.fastN=signal.getHistory(true);
-    re.slowN=signal.getHistory(false);
+    //re.fastN=signal.getHistory(true);
+    //re.slowN=signal.getHistory(false);
 
     return re;
 

@@ -28,7 +28,6 @@
 #include "pipeline/risk_handler.hpp"
 #include "pipeline/portfolio_handler.hpp"
 #include "pipeline/excecution_handler.hpp"
-#include "pipeline/trace_handler.hpp"
 #include "pipeline/report_handler.hpp"
 #include "pipeline/stop_manager.hpp"
 
@@ -53,8 +52,6 @@ class Dispatcher{
     {
        // Set the risk handler
        m_handlerRisk.current=VolatilityScaleStop<Dispatcher>;
-       //m_handlerRisk.current=FollowThrough<Dispatcher>;
-
     }
 
     using queue=RingBuffer<Event,capacity>;
@@ -71,6 +68,7 @@ class Dispatcher{
     }
 
     // Overload 'on' functions to run the appropriate handler 
+    // Dispatches events across the pipeline
 
     void on(const events::MarketEvent& ev) { // Ran every bar 
         m_handlerSignal.on(ev), m_handlerReport.setEquity(); m_handlerStop.on(ev);
@@ -104,7 +102,6 @@ class Dispatcher{
 
     queue m_queue{};
 
-    TraceHandler m_traceHandler;
     SignalHandler<Dispatcher> m_handlerSignal;
     RiskData<Dispatcher> m_handlerRisk;
     ExcecutionHandler<Dispatcher> m_handlerExce;
@@ -114,4 +111,4 @@ class Dispatcher{
     
 };
 
-}
+} // namespace events 

@@ -38,11 +38,6 @@ class StopHandler {
 
         // Long stop, stop triggers on low <= stopPrice
         if (s.side == trd::Side::Buy && current.low <= s.stopPrice) {
-
-            //std::cout << "Stop hit for BUY at epoch " << current.epoch
-                      //<< " stop price : " << s.stopPrice
-                     // << " current low : " << current.low << "\n";
-
             // Deactivate immediately so it cannot fire again this bar
             s.active = false;
 
@@ -59,11 +54,6 @@ class StopHandler {
 
         // Short stop, stop triggers on high >= stopPrice 
         if (s.side == trd::Side::Sell && current.high >= s.stopPrice) {
-
-            //std::cout << " Short stop triggered at epoch " << current.epoch
-                      //<< " stop price : " << s.stopPrice
-                      //<< " current high : " << current.high << "\n";
-
             // Deactivate immediately so it cannot fire again this bar
             s.active = false;
 

@@ -28,5 +28,5 @@ struct FillEvent { trd::timestamp epoch; trd::Side side; trd::quantity qty; trd:
 
 using Event = std::variant<MarketEvent, SignalEvent, OrderEvent, FillEvent>;
 
-} 
+} // namespace events 
 

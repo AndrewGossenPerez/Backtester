@@ -47,8 +47,8 @@ class SmoothEMA : public Signaller {
     float m_alphaSlow;
     trd::Side prevSignal{trd::Side::Hold}; // Won't prevent a buy/sell on first bar 
 
-    std::vector<trd::price> m_fastHistory;
-    std::vector<trd::price> m_slowHistory;
+    std::vector<trd::price> m_fastHistory; // Would be a ring buffer in live version
+    std::vector<trd::price> m_slowHistory; // Would be a ring buffer in live version
 
     double m_fastEMA = 0.0f;
     double m_slowEMA = 0.0f;

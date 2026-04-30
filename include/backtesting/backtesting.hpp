@@ -18,7 +18,6 @@
 namespace trd{ 
 
 struct TradeLog { // Stores each completed trade 
-
     trd::timestamp epoch;  
     trd::Side side;     
     long double qty;    
@@ -27,16 +26,13 @@ struct TradeLog { // Stores each completed trade
 
     TradeLog(trd::timestamp e,trd::Side s,long double q,trd::price p,trd::price f)
     : epoch(e), side(s), qty(q), price(p), fee(f) {}
-    
 };
 
 struct EquityPoint { // Used to graph equity as a function of time
-
     trd::timestamp epoch;
     trd::price equity;
     long double pos;
     EquityPoint(trd::timestamp e,trd::price eq,long double qty) : epoch(e), equity(eq), pos(qty) {} 
-
 };
 
 struct Trade{ // An excecuted trade during a FillEvent evnet 
@@ -60,7 +56,6 @@ struct Result{  // Final backtest result metadata
     std::optional<std::vector<trd::price>> slowN;
     // ATR Values 
     std::optional<std::vector<trd::price>> atrs;
-
     // Summary fields for the final output 
     trd::price finalEquity{0.0};
     trd::price maxDD{0.0};
@@ -73,15 +68,12 @@ struct Result{  // Final backtest result metadata
 class Backtest{
 
     public:
-
     Backtest(Portfolio& portfolio) : m_portfolio(portfolio) {}
-
     Result run(std::vector<trd::Bar>& bars,Signaller& strategy,bool live);
 
     private: 
-
     Portfolio& m_portfolio;
 
 };
 
-}
+} // namespace trd 

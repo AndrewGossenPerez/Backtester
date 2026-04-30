@@ -38,7 +38,7 @@ pybind11_add_module(trading_engine
 target_link_libraries(trading_engine PRIVATE engine_core)
 
 # Standalone exe
-add_executable(trading_main src/main.cpp)
+add_executable(trading_main src/main.cpp src/benchmarking/benchmark.cpp)
 
 # Add include path for trading_main
 target_include_directories(trading_main PRIVATE

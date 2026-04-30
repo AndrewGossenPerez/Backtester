@@ -32,7 +32,8 @@ void benchMark();
 
 int main() { 
 
-    //benchMark();
+    benchMark();
     return 1;
+
 
 }

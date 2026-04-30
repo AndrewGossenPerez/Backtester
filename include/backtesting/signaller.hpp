@@ -1,6 +1,6 @@
-// strategies.hpp, created by Andrew Gossen.
+// signaller.hpp, created by Andrew Gossen.
 
-// Each strategy is derived from 'Strategy' which holds an onBar function
+// Each signaller is derived from 'Signaller' which holds an onBar function
 // which is called for each new bar 
 
 #pragma once 

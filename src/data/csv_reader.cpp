@@ -203,7 +203,7 @@ std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
     std::string fileContents=readFile(file); // Load a string buffer for the csv 
     
     std::vector<trd::Bar> bars;
-    bars.reserve(fileContents.size());
+    bars.reserve(fileContents.size()/64);
 
     const char* p = fileContents.data(); // Get first char pointer in the string buffer 
     // Will be incremented to parse through the csv 
@@ -223,6 +223,7 @@ std::vector<trd::Bar> trd::csvReader::loadBars(const std::string& file){
         membersInitialised+=parseOHLCV(p,end,bar.high); // High
         membersInitialised+=parseOHLCV(p,end,bar.low); // Low 
         membersInitialised+=parseOHLCV(p,end,bar.close); // Close 
+        
         trd::quantity vol_ticks;
         membersInitialised += parseQuantity(p, end, QTY_SCALE, vol_ticks); // Bar Vol
         bar.volume=static_cast<trd::quantity>(vol_ticks); 
