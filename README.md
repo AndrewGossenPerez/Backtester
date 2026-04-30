@@ -69,7 +69,7 @@ Each market bar propagates through the following event pipeline:
 - Single-threaded execution
 - 1000 runs (with warmup)
 - Simple EMA signaller and volatility sizer strategy
-- 
+  
 ---
 
 ### Backtesting Engine
