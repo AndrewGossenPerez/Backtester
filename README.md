@@ -2,7 +2,7 @@
 
 # A Backtester
 
-Work-in-progress trading engine featuring a C++ event-driven backtesting engine,  
+Work-in-progress backtester featuring a C++ event-driven backtesting engine,  
 CSV market-data ingestion, and a Python front-end for visualisation and plotting.
 
 ### Installation
