@@ -24,6 +24,7 @@ cmake --build build -j
 ## Python example
 
 ```bash
+python3 -m pip install -r requirements.txt
 PYTHONPATH=build python3 python/backtest_plotter.py
 ```
 
