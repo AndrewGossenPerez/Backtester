@@ -66,8 +66,8 @@ Summary summarize(std::vector<double> values) {
 void benchMark() {
     std::printf("--- BACKTEST BENCHMARK STARTING :) ---\n");
 
-    constexpr int BACKTEST_RUNS = 1000;
-    constexpr int CSV_RUNS = 1000;
+    constexpr int BACKTEST_RUNS = 10;
+    constexpr int CSV_RUNS = 10;
 
     const trd::price startingEquity{1'000};
 
