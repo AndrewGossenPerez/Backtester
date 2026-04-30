@@ -10,8 +10,6 @@
 #include "backtesting/backtesting.hpp"
 #include "signallers/SmoothEMA.hpp"
 #include "signallers/BuyNHold.hpp"
-#include "private_risklayers/LSweep.hpp"
-#include "private_strategies/LSweep.hpp"
 #include "data/csv_reader.hpp"
 #include "data/config.hpp"
 #include <cstdint>
@@ -30,14 +28,13 @@ static trd::Result run_backtest(int startingAmount) {
    
     trd::Backtest bt(p);
 
-   // SmoothEMA<20,100> signal(true, 0.0005);
+    SmoothEMA<20,100> signal(true, 0.0005);
     //BuyAndHold signal;
-    LiquiditySweep<30> signal;
 
     trd::Result re=bt.run(bars,signal,false);
 
-    //re.fastN=signal.getHistory(true);
-    //re.slowN=signal.getHistory(false);
+    re.fastN=signal.getHistory(true);
+    re.slowN=signal.getHistory(false);
 
     return re;
 
@@ -59,7 +56,7 @@ static py::list tradelogs_to_pylist(const std::vector<trd::TradeLog>& trades) {
     return py_trades;
 }
 
-static py::dict result_arrays(const trd::Result& r) {
+static py::dict result_arrays(const trd::Result& r) { // Export data from backtest to Python via pybind
 
     const auto& pts = r.equityPoints;
     const auto& trds = r.trades; 
@@ -123,7 +120,6 @@ static py::dict result_arrays(const trd::Result& r) {
 
 }
 
-
 PYBIND11_MODULE(trading_engine, m) {
 
     m.doc() = "The python interface for the trading engine";
@@ -133,11 +129,11 @@ PYBIND11_MODULE(trading_engine, m) {
     m.def("run_arrays", [](int startingAmount) {
         trd::Result r = run_backtest(startingAmount);
         return result_arrays(r);
-    }, "Run backtest and return numpy arrays");
+    }, "Runs backtest and return numpy arrays");
 
     m.attr("TIME_SCALE") = py::int_(TS_SCALE);
     m.attr("QTY_SCALE") = py::int_(QTY_SCALE);
 
-    m.def("run", &run_backtest, "Run a backtest with predefined data");
+    m.def("run", &run_backtest, "Runs a backtest");
 
 }

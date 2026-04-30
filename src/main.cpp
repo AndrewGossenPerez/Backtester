@@ -3,7 +3,6 @@
 #include "backtesting/signaller.hpp"
 #include "backtesting/backtesting.hpp"
 #include "signallers/SmoothEMA.hpp"
-#include "API/helper.hpp"
 
 #include <algorithm>
 #include <string>
@@ -15,9 +14,6 @@
 void benchMark();
 
 int main() { 
-
     benchMark();
     return 1;
-
-
 }

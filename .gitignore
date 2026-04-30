@@ -18,11 +18,5 @@ __pycache__/
 .vscode/
 samples/
 
-# Not for you 
-include/API/keys.hpp
 #csv Generator for OHLCV bars 
 python/Generator.py
-
-#Private strategies
-include/private_risklayers
-include/private_strategies

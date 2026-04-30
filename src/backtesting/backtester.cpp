@@ -23,7 +23,6 @@
 #include "events/dispatcher.hpp"
 #include "events/events.hpp"
 #include "data/market_state.hpp"
-#include "API/helper.hpp"
 
 #include <chrono>
 #include <thread>

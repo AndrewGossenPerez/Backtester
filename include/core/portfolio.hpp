@@ -7,7 +7,6 @@
 #include "core/types.hpp"
 #include "data/config.hpp"
 #include "utility/scaler.hpp"
-#include "API/helper.hpp"
 
 #include <algorithm>
 #include <cstdint>
