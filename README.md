@@ -5,8 +5,7 @@
 Work-in-progress backtester featuring a C++ event-driven backtesting engine,  
 CSV market-data ingestion, and a Python front-end for visualisation and plotting.
 
-### Installation
-## Build
+## Installation
 
 ```bash
 git clone --recursive https://github.com/AndrewGossenPerez/Backtester.git
@@ -30,9 +29,7 @@ python -m pip install -r requirements.txt
 PYTHONPATH="$PWD/build" python python/backtest_plotter.py
 ```
 
-
-> Note: The Python example (for now) uses a predefined backtest configuration in [`binding.cpp`](src/binding/binding.cpp).  
-> To modify the strategy, dataset, or parameters, edit `run_backtest` and rebuild.
+> Note: The Python example uses a predefined backtest configuration in [`binding.cpp`](src/binding/binding.cpp).
 
 ## Core components:
 
