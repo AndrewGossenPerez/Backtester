@@ -1,7 +1,5 @@
 <img src="images/AAPL(24,120).png" width="500">
 
-# A Backtester
-
 Work-in-progress backtester featuring a C++ event-driven backtesting engine,  
 CSV market-data ingestion, and a Python front-end for visualisation and plotting.
 
