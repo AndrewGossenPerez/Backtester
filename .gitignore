@@ -1,4 +1,5 @@
 # Build directories
+vcpkg/
 build/
 build_py/
 .DS_Store

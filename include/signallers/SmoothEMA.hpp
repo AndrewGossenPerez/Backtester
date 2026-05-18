@@ -19,7 +19,9 @@ class SmoothEMA : public Signaller {
 
    public:
 
-    SmoothEMA(std::optional<bool> threshEnabled = std::nullopt,
+    SmoothEMA(
+              std::size_t barSize,
+              std::optional<bool> threshEnabled = std::nullopt,
               std::optional<double> pThresh = std::nullopt,
               std::optional<float> alphaFast = std::nullopt,
               std::optional<float> alphaSlow = std::nullopt)
@@ -28,7 +30,10 @@ class SmoothEMA : public Signaller {
           // If not provide it wil be calculated from alpha = 2/(N+1)
           m_alphaFast(alphaFast.value_or(2.0f / (static_cast<float>(NFast) + 1.0f))),
           m_alphaSlow(alphaSlow.value_or(2.0f / (static_cast<float>(NSlow) + 1.0f)))
-        {}
+        {
+            m_slowHistory.reserve(barSize);
+            m_fastHistory.reserve(barSize);
+        }
 
     Signal onBar(const trd::Bar&) override {
         return {currentSignal, currentMarketChange};

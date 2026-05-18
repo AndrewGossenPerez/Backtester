@@ -28,7 +28,7 @@ static trd::Result run_backtest(int startingAmount) {
    
     trd::Backtest bt(p);
 
-    SmoothEMA<20,100> signal(true, 0.0005);
+    SmoothEMA<20,100> signal(bars.size(),true, 0.0005);
     //BuyAndHold signal;
 
     trd::Result re=bt.run(bars,signal,false);
