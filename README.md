@@ -5,6 +5,11 @@ CSV market-data ingestion, and a Python front-end for visualisation and plotting
 
 ## Installation
 
+Required dependencies
+- vcpkg
+- curl (via vcpkg)
+- nlohmann_json (via vcpkg)
+  
 ```bash
 git clone --recursive https://github.com/AndrewGossenPerez/Backtester.git
 cd Backtester
