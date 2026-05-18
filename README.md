@@ -5,34 +5,65 @@ CSV market-data ingestion, and a Python front-end for visualisation and plotting
 
 ## Installation
 
-Required dependencies
+### Requirements
+- CMake ≥ 3.12
+- C++17 compiler (MSVC recommended on Windows)
+- Git
 - vcpkg
-- curl (via vcpkg)
-- nlohmann_json (via vcpkg)
-  
+
+---
+
+### 1) Clone repository
+
 ```bash
 git clone --recursive https://github.com/AndrewGossenPerez/Backtester.git
 cd Backtester
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+```
+### 2) Install vcpkg
+```bash
+git clone https://github.com/microsoft/vcpkg
+cd vcpkg
+```
+#### Windows
+```bash
+.\bootstrap-vcpkg.bat
+.\vcpkg install curl nlohmann-json
+```
+#### Linux / macOS
+```bash
+./bootstrap-vcpkg.sh
+./vcpkg install curl nlohmann-json
+```
+### 3) Configure project
+#### Windows
+```bash
+cmake -S . -B build ^
+  -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake ^
+  -DVCPKG_TARGET_TRIPLET=x64-windows
+```
+### Linux / macOS
+```bash
+cmake -S . -B build \
+  -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+### 4) Build
+#### Windows
+```bash
+cmake --build build --config Release
+```
+#### Linux / macOS
+```bash
 cmake --build build -j
 ```
-
-## Run
-
+### 5) Run 
+#### Windows
+```bash
+.\build\Release\trading_main.exe
+```
+#### Linux / macOS
 ```bash
 ./build/trading_main
 ```
-
-## Python example
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-PYTHONPATH="$PWD/build" python python/backtest_plotter.py
-```
-
-> Note: The Python example uses a predefined backtest configuration in [`binding.cpp`](src/binding/binding.cpp).
 
 ## Core components:
 
