@@ -8,7 +8,6 @@ CSV market-data ingestion, and a Python front-end for visualisation and plotting
 ### Requirements
 - CMake ≥ 3.12
 - C++17 compiler (MSVC recommended on Windows)
-- Git
 - vcpkg
 
 ---
