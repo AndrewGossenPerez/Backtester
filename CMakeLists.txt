@@ -10,7 +10,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(CURL REQUIRED)
 
 # Engine core library
-add_library(engine_core SHARED
+add_library(engine_core STATIC
     src/backtesting/backtester.cpp
     src/data/csv_reader.cpp
 )
