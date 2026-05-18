@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <iostream>
 #include <vector>
+#include <string>
 
 namespace {
 
@@ -66,16 +67,17 @@ Summary summarize(std::vector<double> values) {
 void benchMark() {
     std::printf("--- BACKTEST BENCHMARK STARTING :) ---\n");
 
-    constexpr int BACKTEST_RUNS = 10;
-    constexpr int CSV_RUNS = 10;
+    constexpr int BACKTEST_RUNS = 100;
+    constexpr int CSV_RUNS = 100;
 
     const trd::price startingEquity{1'000};
 
     trd::csvReader reader;
 
     // Load once for the actual backtest benchmark.
-    std::vector<trd::Bar> mainBars =
-        reader.loadBars("samples/AAPL.csv");
+    std::string mainBarsPath = "samples/AAPL.csv"; // Note, would likely need to be a larger dataset, i.e. BTC 
+    std::vector<trd::Bar> mainBars = reader.loadBars(mainBarsPath);
+    std::vector<trd::Bar> warmupBars = reader.loadBars("samples/AAPL.csv");
 
     if (mainBars.empty()) {
         std::printf("No bars loaded.\n");
@@ -87,14 +89,14 @@ void benchMark() {
 
     // Warm up using separate objects so the measured runs do not inherit state.
     std::printf("\n-- ENGINE WARMUP --\n");
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 1; ++i) {
         BacktestPortfolio warmPortfolio;
         warmPortfolio.setBalance(startingEquity);
 
-        SmoothEMA<30, 90> warmStrat(false, 0.0015);
+        SmoothEMA<30, 90> warmStrat(warmupBars.size(),false, 0.0015);
         trd::Backtest warmBt(warmPortfolio);
 
-        (void) warmBt.run(mainBars, warmStrat, false);
+        (void) warmBt.run(warmupBars, warmStrat, false);
     }
     std::printf("-- ENGINE WARMUP COMPLETED --\n");
 
@@ -111,7 +113,7 @@ void benchMark() {
         BacktestPortfolio runPortfolio;
         runPortfolio.setBalance(startingEquity);
 
-        SmoothEMA<30, 90> runStrat(false, 0.0015);
+        SmoothEMA<30, 90> runStrat(mainBars.size(),false, 0.0015);
         trd::Backtest runBt(runPortfolio);
 
         const auto t1 = clock_type::now();
@@ -164,19 +166,23 @@ void benchMark() {
     csvSecs.reserve(CSV_RUNS);
 
     // One untimed load to warm OS cache/parser path.
-    (void) reader.loadBars("samples/AAPL.csv");
+    (void) reader.loadBars(mainBarsPath);
+
+    volatile std::size_t sink = 0;
 
     for (int i = 0; i < CSV_RUNS; ++i) {
+
         const auto t1 = clock_type::now();
-        std::vector<trd::Bar> bars = reader.loadBars("samples/AAPL.csv");
+
+        std::vector<trd::Bar> bars = reader.loadBars(mainBarsPath);
+
+        sink += bars.size();
+
         const auto t2 = clock_type::now();
 
-        if (bars.empty()) {
-            std::printf("CSV benchmark failed: no bars loaded.\n");
-            return;
-        }
-
-        csvSecs.push_back(std::chrono::duration<double>(t2 - t1).count());
+        csvSecs.push_back(
+            std::chrono::duration<double>(t2 - t1).count()
+        );
     }
 
     const Summary csv = summarize(csvSecs);
